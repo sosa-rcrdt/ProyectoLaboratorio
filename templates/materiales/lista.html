@@ -5,7 +5,7 @@
 {% block content %}
     <h1>Lista de materiales</h1>
 
-    <a href="{{ url_for('crear_material') }}">Registrar nuevo material</a>
+    <a href="{{ url_for('materiales.crear_material') }}">Registrar nuevo material</a>
 
     <br><br>
 
@@ -66,7 +66,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('editar_material', id=material.id) }}">Editar</a>
+                            <a href="{{ url_for('materiales.editar_material', id=material.id) }}">Editar</a>
 
                             <button
                                 type="button"
