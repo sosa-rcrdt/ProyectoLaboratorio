@@ -45,14 +45,14 @@ def guardar_archivo(archivo, carpeta_destino):
 
 # Ruta principal y ruta de listado
 @app.route("/")
-@app.route("/materiales")
+@app.route("/")
 def listar_materiales():
     materiales = Material.query.all()
-    return render_template("materiales/lista.html", materiales=materiales)
+    return render_template("/materiales/lista.html", materiales=materiales)
 
 
 # Crear material
-@app.route("/materiales/crear", methods=["GET", "POST"])
+@app.route("/crear", methods=["GET", "POST"])
 def crear_material():
     if request.method == "POST":
         numero_serie = request.form["numero_serie"]
@@ -86,11 +86,11 @@ def crear_material():
 
         return redirect(url_for("listar_materiales"))
 
-    return render_template("materiales/crear.html")
+    return render_template("/materiales/crear.html")
 
 
 # Editar material
-@app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
+@app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar_material(id):
     material = Material.query.get_or_404(id)
 
@@ -117,7 +117,7 @@ def editar_material(id):
         db.session.commit()
         return redirect(url_for("listar_materiales"))
 
-    return render_template("materiales/editar.html", material=material)
+    return render_template("/materiales/editar.html", material=material)
 
 
 # Eliminar material

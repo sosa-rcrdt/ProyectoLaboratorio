@@ -5,7 +5,6 @@
 {% block content %}
     <h1>Lista de materiales</h1>
 
-    <br><br>
     <a href="{{ url_for('crear_material') }}">Registrar nuevo material</a>
 
     <br><br>
@@ -14,7 +13,7 @@
         <table border="1" cellpadding="8" cellspacing="0">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <!-- <th>ID</th> -->
                     <th>Número de serie</th>
                     <th>Nombre</th>
                     <th>Marca</th>
@@ -30,7 +29,7 @@
             <tbody>
                 {% for material in materiales %}
                     <tr>
-                        <td>{{ material.id }}</td>
+                        <!-- <td>{{ material.id }}</td> -->
                         <td>{{ material.numero_serie }}</td>
                         <td>{{ material.nombre_material }}</td>
                         <td>{{ material.marca }}</td>
@@ -40,14 +39,28 @@
                         <td>{{ material.estado_prestamo }}</td>
                         <td>
                             {% if material.foto %}
-                                <a href="{{ url_for('static', filename='uploads/fotos/' ~ material.foto) }}" target="_blank">Ver foto</a>
+                                <button
+                                    type="button"
+                                    class="btn-modal"
+                                    data-tipo="foto"
+                                    data-titulo="Foto de {{ material.nombre_material }}"
+                                    data-archivo="{{ url_for('static', filename='uploads/fotos/' ~ material.foto) }}">
+                                    Ver foto
+                                </button>
                             {% else %}
                                 Sin foto
                             {% endif %}
                         </td>
                         <td>
                             {% if material.pdf_especificaciones %}
-                                <a href="{{ url_for('static', filename='uploads/pdfs/' ~ material.pdf_especificaciones) }}" target="_blank">Ver PDF</a>
+                                <button
+                                    type="button"
+                                    class="btn-modal"
+                                    data-tipo="pdf"
+                                    data-titulo="PDF de {{ material.nombre_material }}"
+                                    data-archivo="{{ url_for('static', filename='uploads/pdfs/' ~ material.pdf_especificaciones) }}">
+                                    Ver PDF
+                                </button>
                             {% else %}
                                 Sin PDF
                             {% endif %}
@@ -55,12 +68,13 @@
                         <td>
                             <a href="{{ url_for('editar_material', id=material.id) }}">Editar</a>
 
-                            <form action="{{ url_for('eliminar_material', id=material.id) }}"
-                                  method="POST"
-                                  style="display:inline;"
-                                  onsubmit="return confirm('¿Estás seguro de que deseas eliminar este material?');">
-                                <button type="submit">Eliminar</button>
-                            </form>
+                            <button
+                                type="button"
+                                class="btn-eliminar"
+                                data-id="{{ material.id }}"
+                                data-nombre="{{ material.nombre_material }}">
+                                Eliminar
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}

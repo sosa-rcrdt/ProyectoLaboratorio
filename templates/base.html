@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Proyecto Laboratorio{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Laboratorio{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -10,5 +11,28 @@
     {% block content %}
     {% endblock %}
 
+    <div id="archivoModal" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar-modal" id="cerrarModal">&times;</span>
+            <h2 id="modalTitulo">Vista previa</h2>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal de eliminación -->
+    <div id="eliminarModal" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar-modal" id="cerrarEliminarModal">&times;</span>
+            <h2>Confirmar eliminación</h2>
+            <p id="mensajeEliminar"></p>
+
+            <form id="formEliminar" method="POST">
+                <button type="submit">Sí, eliminar</button>
+                <button type="button" id="cancelarEliminar">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
