@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de materiales{% endblock %}
+
+{% block content %}
+    <h1>Lista de materiales</h1>
+
+    <a href="{{ url_for('inicio') }}">Volver al inicio</a>
+    <br><br>
+    <a href="{{ url_for('crear_material') }}">Registrar nuevo material</a>
+
+    <br><br>
+
+    {% if materiales %}
+        <table border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Número de serie</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Doctor responsable</th>
+                    <th>Año</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materiales %}
+                    <tr>
+                        <td>{{ material.id }}</td>
+                        <td>{{ material.numero_serie }}</td>
+                        <td>{{ material.nombre_material }}</td>
+                        <td>{{ material.marca }}</td>
+                        <td>{{ material.doctor_responsable }}</td>
+                        <td>{{ material.anio }}</td>
+                        <td>{{ material.ubicacion }}</td>
+                        <td>{{ material.estado_prestamo }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay materiales registrados todavía.</p>
+    {% endif %}
+{% endblock %}

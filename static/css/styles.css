@@ -1,0 +1,10 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
