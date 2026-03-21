@@ -23,6 +23,8 @@
                     <th>Año</th>
                     <th>Ubicación</th>
                     <th>Estado</th>
+                    <th>Foto</th>
+                    <th>PDF</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -37,6 +39,20 @@
                         <td>{{ material.anio }}</td>
                         <td>{{ material.ubicacion }}</td>
                         <td>{{ material.estado_prestamo }}</td>
+                        <td>
+                            {% if material.foto %}
+                                <a href="{{ url_for('static', filename='uploads/fotos/' ~ material.foto) }}" target="_blank">Ver foto</a>
+                            {% else %}
+                                Sin foto
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if material.pdf_especificaciones %}
+                                <a href="{{ url_for('static', filename='uploads/pdfs/' ~ material.pdf_especificaciones) }}" target="_blank">Ver PDF</a>
+                            {% else %}
+                                Sin PDF
+                            {% endif %}
+                        </td>
                         <td>
                             <a href="{{ url_for('editar_material', id=material.id) }}">Editar</a>
 

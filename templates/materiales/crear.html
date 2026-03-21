@@ -5,7 +5,7 @@
 {% block content %}
     <h1>Registrar nuevo material</h1>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div>
             <label for="numero_serie">Número de serie:</label>
             <input type="text" id="numero_serie" name="numero_serie" required>
@@ -56,6 +56,20 @@
                 <option value="Fuera de servicio">Fuera de servicio</option>
                 <option value="En mantenimiento">En mantenimiento</option>
             </select>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="foto">Foto:</label>
+            <input type="file" id="foto" name="foto" accept="image/*">
+        </div>
+
+        <br>
+
+        <div>
+            <label for="pdf_especificaciones">PDF de especificaciones:</label>
+            <input type="file" id="pdf_especificaciones" name="pdf_especificaciones" accept=".pdf,application/pdf">
         </div>
 
         <br>

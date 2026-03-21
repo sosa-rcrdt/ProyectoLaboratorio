@@ -5,7 +5,7 @@
 {% block content %}
     <h1>Editar material</h1>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div>
             <label for="numero_serie">Número de serie:</label>
             <input type="text" id="numero_serie" name="numero_serie" value="{{ material.numero_serie }}" required>
@@ -56,6 +56,26 @@
                 <option value="Fuera de servicio" {% if material.estado_prestamo == "Fuera de servicio" %}selected{% endif %}>Fuera de servicio</option>
                 <option value="En mantenimiento" {% if material.estado_prestamo == "En mantenimiento" %}selected{% endif %}>En mantenimiento</option>
             </select>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="foto">Nueva foto:</label>
+            <input type="file" id="foto" name="foto" accept="image/*">
+            {% if material.foto %}
+                <p>Foto actual: {{ material.foto }}</p>
+            {% endif %}
+        </div>
+
+        <br>
+
+        <div>
+            <label for="pdf_especificaciones">Nuevo PDF:</label>
+            <input type="file" id="pdf_especificaciones" name="pdf_especificaciones" accept=".pdf,application/pdf">
+            {% if material.pdf_especificaciones %}
+                <p>PDF actual: {{ material.pdf_especificaciones }}</p>
+            {% endif %}
         </div>
 
         <br>
