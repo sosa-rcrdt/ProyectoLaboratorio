@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Editar material{% endblock %}
+
+{% block content %}
+    <h1>Editar material</h1>
+
+    <form method="POST">
+        <div>
+            <label for="numero_serie">Número de serie:</label>
+            <input type="text" id="numero_serie" name="numero_serie" value="{{ material.numero_serie }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="marca">Marca:</label>
+            <input type="text" id="marca" name="marca" value="{{ material.marca }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="doctor_responsable">Nombre del Dr. responsable:</label>
+            <input type="text" id="doctor_responsable" name="doctor_responsable" value="{{ material.doctor_responsable }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="nombre_material">Nombre del material:</label>
+            <input type="text" id="nombre_material" name="nombre_material" value="{{ material.nombre_material }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="anio">Año:</label>
+            <input type="number" id="anio" name="anio" value="{{ material.anio }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="ubicacion">Ubicación:</label>
+            <input type="text" id="ubicacion" name="ubicacion" value="{{ material.ubicacion }}" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="estado_prestamo">Estado del préstamo:</label>
+            <select id="estado_prestamo" name="estado_prestamo" required>
+                <option value="Disponible" {% if material.estado_prestamo == "Disponible" %}selected{% endif %}>Disponible</option>
+                <option value="En préstamo" {% if material.estado_prestamo == "En préstamo" %}selected{% endif %}>En préstamo</option>
+                <option value="Fuera de servicio" {% if material.estado_prestamo == "Fuera de servicio" %}selected{% endif %}>Fuera de servicio</option>
+                <option value="En mantenimiento" {% if material.estado_prestamo == "En mantenimiento" %}selected{% endif %}>En mantenimiento</option>
+            </select>
+        </div>
+
+        <br>
+
+        <button type="submit">Guardar cambios</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('listar_materiales') }}">Volver a la lista</a>
+{% endblock %}

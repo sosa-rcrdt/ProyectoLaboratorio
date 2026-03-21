@@ -67,6 +67,33 @@ def crear_material():
     return render_template("materiales/crear.html")
 
 
+@app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
+def editar_material(id):
+    material = Material.query.get_or_404(id)
+
+    if request.method == "POST":
+        material.numero_serie = request.form["numero_serie"]
+        material.marca = request.form["marca"]
+        material.doctor_responsable = request.form["doctor_responsable"]
+        material.nombre_material = request.form["nombre_material"]
+        material.anio = int(request.form["anio"])
+        material.ubicacion = request.form["ubicacion"]
+        material.estado_prestamo = request.form["estado_prestamo"]
+
+        db.session.commit()
+        return redirect(url_for("listar_materiales"))
+
+    return render_template("materiales/editar.html", material=material)
+
+
+@app.route("/materiales/eliminar/<int:id>", methods=["POST"])
+def eliminar_material(id):
+    material = Material.query.get_or_404(id)
+    db.session.delete(material)
+    db.session.commit()
+    return redirect(url_for("listar_materiales"))
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

@@ -23,6 +23,7 @@
                     <th>Año</th>
                     <th>Ubicación</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,6 +37,16 @@
                         <td>{{ material.anio }}</td>
                         <td>{{ material.ubicacion }}</td>
                         <td>{{ material.estado_prestamo }}</td>
+                        <td>
+                            <a href="{{ url_for('editar_material', id=material.id) }}">Editar</a>
+
+                            <form action="{{ url_for('eliminar_material', id=material.id) }}"
+                                  method="POST"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('¿Estás seguro de que deseas eliminar este material?');">
+                                <button type="submit">Eliminar</button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
