@@ -5,15 +5,18 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
+# Configuración de la base de datos
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Configuración de carpetas para archivos
 app.config["UPLOAD_FOLDER_FOTOS"] = os.path.join("static", "uploads", "fotos")
 app.config["UPLOAD_FOLDER_PDFS"] = os.path.join("static", "uploads", "pdfs")
 
 db = SQLAlchemy(app)
 
 
+# Modelo de la tabla Material
 class Material(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_serie = db.Column(db.String(100), unique=True, nullable=False)
@@ -30,6 +33,7 @@ class Material(db.Model):
         return f"<Material {self.nombre_material}>"
 
 
+# Función auxiliar para guardar archivos
 def guardar_archivo(archivo, carpeta_destino):
     if archivo and archivo.filename:
         nombre_seguro = secure_filename(archivo.filename)
@@ -39,17 +43,15 @@ def guardar_archivo(archivo, carpeta_destino):
     return None
 
 
+# Ruta principal y ruta de listado
 @app.route("/")
-def inicio():
-    return render_template("index.html")
-
-
 @app.route("/materiales")
 def listar_materiales():
     materiales = Material.query.all()
     return render_template("materiales/lista.html", materiales=materiales)
 
 
+# Crear material
 @app.route("/materiales/crear", methods=["GET", "POST"])
 def crear_material():
     if request.method == "POST":
@@ -87,6 +89,7 @@ def crear_material():
     return render_template("materiales/crear.html")
 
 
+# Editar material
 @app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
 def editar_material(id):
     material = Material.query.get_or_404(id)
@@ -117,6 +120,7 @@ def editar_material(id):
     return render_template("materiales/editar.html", material=material)
 
 
+# Eliminar material
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
 def eliminar_material(id):
     material = Material.query.get_or_404(id)
