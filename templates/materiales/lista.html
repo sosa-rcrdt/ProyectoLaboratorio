@@ -3,84 +3,91 @@
 {% block title %}Lista de materiales{% endblock %}
 
 {% block content %}
-    <h1>Lista de materiales</h1>
 
-    <a href="{{ url_for('materiales.crear_material') }}">Registrar nuevo material</a>
+<h1>Lista de materiales</h1>
 
-    <br><br>
+<a href="{{ url_for('menu') }}">Volver al menú</a>
+<br><br>
 
-    {% if materiales %}
-        <table border="1" cellpadding="8" cellspacing="0">
-            <thead>
-                <tr>
-                    <!-- <th>ID</th> -->
-                    <th>Número de serie</th>
-                    <th>Nombre</th>
-                    <th>Marca</th>
-                    <th>Doctor responsable</th>
-                    <th>Año</th>
-                    <th>Ubicación</th>
-                    <th>Estado</th>
-                    <th>Foto</th>
-                    <th>PDF</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for material in materiales %}
-                    <tr>
-                        <!-- <td>{{ material.id }}</td> -->
-                        <td>{{ material.numero_serie }}</td>
-                        <td>{{ material.nombre_material }}</td>
-                        <td>{{ material.marca }}</td>
-                        <td>{{ material.doctor_responsable }}</td>
-                        <td>{{ material.anio }}</td>
-                        <td>{{ material.ubicacion }}</td>
-                        <td>{{ material.estado_prestamo }}</td>
-                        <td>
-                            {% if material.foto %}
-                                <button
-                                    type="button"
-                                    class="btn-modal"
-                                    data-tipo="foto"
-                                    data-titulo="Foto de {{ material.nombre_material }}"
-                                    data-archivo="{{ url_for('static', filename='uploads/fotos/' ~ material.foto) }}">
-                                    Ver foto
-                                </button>
-                            {% else %}
-                                Sin foto
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if material.pdf_especificaciones %}
-                                <button
-                                    type="button"
-                                    class="btn-modal"
-                                    data-tipo="pdf"
-                                    data-titulo="PDF de {{ material.nombre_material }}"
-                                    data-archivo="{{ url_for('static', filename='uploads/pdfs/' ~ material.pdf_especificaciones) }}">
-                                    Ver PDF
-                                </button>
-                            {% else %}
-                                Sin PDF
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('materiales.editar_material', id=material.id) }}">Editar</a>
+<a href="{{ url_for('crear_material') }}">Registrar nuevo material</a>
 
-                            <button
-                                type="button"
-                                class="btn-eliminar"
-                                data-id="{{ material.id }}"
-                                data-nombre="{{ material.nombre_material }}">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No hay materiales registrados todavía.</p>
-    {% endif %}
+<p><strong>Total de materiales registrados:</strong> {{ total_materiales }}</p>
+
+{% if materiales %}
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Número de serie</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Doctor responsable</th>
+            <th>Año</th>
+            <th>Ubicación</th>
+            <th>Estado</th>
+            <th>Foto</th>
+            <th>PDF</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for material in materiales %}
+        <tr>
+            <td>{{ material.id }}</td>
+            <td>{{ material.numero_serie }}</td>
+            <td>{{ material.nombre_material }}</td>
+            <td>{{ material.marca }}</td>
+            <td>{{ material.doctor_responsable }}</td>
+            <td>{{ material.anio }}</td>
+            <td>{{ material.ubicacion }}</td>
+            <td>{{ material.estado_prestamo }}</td>
+
+            <td>
+                {% if material.foto %}
+                    <button type="button"
+                            class="btn-modal"
+                            data-tipo="foto"
+                            data-titulo="Foto de {{ material.nombre_material }}"
+                            data-archivo="{{ material.foto }}">
+                        Ver foto
+                    </button>
+                {% else %}
+                    Sin foto
+                {% endif %}
+            </td>
+
+            <td>
+                {% if material.pdf_especificaciones %}
+                    <button type="button"
+                            class="btn-modal"
+                            data-tipo="pdf"
+                            data-titulo="PDF de {{ material.nombre_material }}"
+                            data-archivo="{{ material.pdf_especificaciones }}">
+                        Ver PDF
+                    </button>
+                {% else %}
+                    Sin PDF
+                {% endif %}
+            </td>
+
+            <td>
+                <a href="{{ url_for('editar_material', id=material.id) }}">
+                    <button type="button">Editar</button>
+                </a>
+                |
+                <button type="button"
+                        class="btn-eliminar"
+                        data-id="{{ material.id }}"
+                        data-nombre="{{ material.nombre_material }}">
+                    Eliminar
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <p>No hay materiales registrados.</p>
+{% endif %}
+
 {% endblock %}

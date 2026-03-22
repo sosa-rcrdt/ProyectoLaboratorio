@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <header>
+        <h1>Laboratorio</h1>
+        <hr>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="contenedor-mensajes">
+                {% for category, message in messages %}
+                    <div class="mensaje-flash {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
     {% block content %}
     {% endblock %}

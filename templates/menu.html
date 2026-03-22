@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Menú principal{% endblock %}
+
+{% block content %}
+<h1>Menú general</h1>
+
+<ul>
+    <li><a href="{{ url_for('crear_material') }}">Registrar material</a></li>
+    <li><a href="{{ url_for('buscar_material') }}">Buscar material por número de serie o nombre</a></li>
+    <li><a href="{{ url_for('materiales_por_profesor') }}">Ver materiales por profesor</a></li>
+    <li><a href="{{ url_for('listar_materiales') }}">Ver todos los materiales</a></li>
+</ul>
+{% endblock %}

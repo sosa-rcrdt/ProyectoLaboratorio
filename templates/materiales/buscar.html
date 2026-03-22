@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar material{% endblock %}
+
+{% block content %}
+
+<h1>Buscar material</h1>
+
+<a href="{{ url_for('menu') }}">Volver al menú</a>
+<br><br>
+
+<form method="POST" id="formBuscarMaterial" novalidate>
+    <div id="erroresBuscar" style="color:red;"></div>
+    <label>Buscar por número de serie o nombre:</label><br>
+    <input type="text" name="busqueda" value="{{ busqueda }}" required>
+    <button type="submit">Buscar</button>
+</form>
+
+<br>
+
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
+{% if busqueda %}
+    <h3>Resultados para: "{{ busqueda }}"</h3>
+
+    {% if resultados %}
+        <table border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Número de serie</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Doctor responsable</th>
+                    <th>Año</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                    <th>Foto</th>
+                    <th>PDF</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in resultados %}
+                <tr>
+                    <td>{{ material.numero_serie }}</td>
+                    <td>{{ material.nombre_material }}</td>
+                    <td>{{ material.marca }}</td>
+                    <td>{{ material.doctor_responsable }}</td>
+                    <td>{{ material.anio }}</td>
+                    <td>{{ material.ubicacion }}</td>
+                    <td>{{ material.estado_prestamo }}</td>
+
+                    <td>
+                        {% if material.foto %}
+                            <button type="button"
+                                    class="btn-modal"
+                                    data-tipo="foto"
+                                    data-titulo="Foto de {{ material.nombre_material }}"
+                                    data-archivo="{{ material.foto }}">
+                                Ver foto
+                            </button>
+                        {% else %}
+                            Sin foto
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if material.pdf_especificaciones %}
+                            <button type="button"
+                                    class="btn-modal"
+                                    data-tipo="pdf"
+                                    data-titulo="PDF de {{ material.nombre_material }}"
+                                    data-archivo="{{ material.pdf_especificaciones }}">
+                                Ver PDF
+                            </button>
+                        {% else %}
+                            Sin PDF
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="{{ url_for('editar_material', id=material.id) }}">
+                            <button type="button">Editar</button>
+                        </a>
+                        |
+                        <button type="button"
+                                class="btn-eliminar"
+                                data-id="{{ material.id }}"
+                                data-nombre="{{ material.nombre_material }}">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se encontraron materiales.</p>
+    {% endif %}
+{% endif %}
+
+{% endblock %}
