@@ -6,10 +6,10 @@
 <div style="max-width: 800px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
         <div>
-            <h1 class="page-title">Edit Material</h1>
-            <p class="page-subtitle">Update physical or electronic component details in the registry.</p>
+            <h1 class="page-title">Editar Material</h1>
+            <p class="page-subtitle">Actualiza los detalles del componente en el registro general.</p>
         </div>
-        <a href="{{ url_for('listar_materiales') }}" class="btn btn-secondary"><i class="material-symbols-rounded">arrow_back</i> Back</a>
+        <a href="{{ url_for('listar_materiales') }}" class="btn btn-secondary"><i class="material-symbols-rounded">arrow_back</i> Atrás</a>
     </div>
 
     {% if error %}
@@ -24,53 +24,53 @@
             <div id="erroresEditar" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
             
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">settings_input_component</i> Component Identity
+                <i class="material-symbols-rounded">settings_input_component</i> Identidad del Componente
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
-                    <label for="nombre_material" class="form-label">Material Name</label>
+                    <label for="nombre_material" class="form-label">Nombre del Material</label>
                     <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', material.nombre_material) }}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="numero_serie" class="form-label">Serial Number</label>
+                    <label for="numero_serie" class="form-label">Número de Serie</label>
                     <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', material.numero_serie) }}" required>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
-                    <label for="marca" class="form-label">Brand / Manufacturer</label>
+                    <label for="marca" class="form-label">Marca / Fabricante</label>
                     <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', material.marca) }}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="anio" class="form-label">Year</label>
+                    <label for="anio" class="form-label">Año</label>
                     <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', material.anio) }}" required>
                 </div>
             </div>
 
             <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">warehouse</i> Storage & Assignment
+                <i class="material-symbols-rounded">warehouse</i> Almacenamiento y Asignación
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
-                    <label for="doctor_responsable" class="form-label">Assigned Teacher/Dr.</label>
+                    <label for="doctor_responsable" class="form-label">Profesor / Dr. Asignado</label>
                     <input type="text" class="form-control" id="doctor_responsable" name="doctor_responsable" value="{{ datos.get('doctor_responsable', material.doctor_responsable) }}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="ubicacion" class="form-label">Storage Location</label>
+                    <label for="ubicacion" class="form-label">Ubicación</label>
                     <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', material.ubicacion) }}" required>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="estado_prestamo" class="form-label">Status</label>
+                <label for="estado_prestamo" class="form-label">Estado</label>
                 <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
-                    <option value="">Select Status</option>
+                    <option value="">Selecciona el estado</option>
                     {% for estado in estados_validos %}
                         <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>{{ estado }}</option>
                     {% endfor %}
@@ -78,32 +78,32 @@
             </div>
 
             <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">description</i> Documentation & Assets
+                <i class="material-symbols-rounded">description</i> Documentación y Archivos
             </h3>
 
             <!-- Notice about current files -->
             {% if material.foto or material.pdf_especificaciones %}
             <div style="background: var(--bg-color); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.875rem; color: var(--text-muted); display:flex; align-items:center; gap:8px; border: 1px dashed var(--border-color);">
                 <i class="material-symbols-rounded" style="color:var(--primary);">info</i>
-                Leave file inputs empty to keep current uploaded files.
+                Deja las entradas de archivo en blanco si deseas conservar los archivos actuales subidos.
             </div>
             {% endif %}
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
-                    <label for="foto" class="form-label">Photo Upload (Replace Image)</label>
+                    <label for="foto" class="form-label">Subir Foto (Reemplazar Imagen)</label>
                     <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
                 </div>
 
                 <div class="form-group">
-                    <label for="pdf_especificaciones" class="form-label">PDF Upload (Replace Specs)</label>
+                    <label for="pdf_especificaciones" class="form-label">Subir PDF (Reemplazar Specs)</label>
                     <input type="file" class="form-control" id="pdf_especificaciones" name="pdf_especificaciones" accept="application/pdf">
                 </div>
             </div>
 
             <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
-                <a href="{{ url_for('listar_materiales') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">save</i> Save Changes</button>
+                <a href="{{ url_for('listar_materiales') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancelar</a>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">save</i> Guardar Cambios</button>
             </div>
         </form>
     </div>

@@ -27,30 +27,30 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="brand-title">Material Ops</div>
-                <div class="brand-subtitle">PRECISION ARCHITECT</div>
+                <div class="brand-title">Gestión de Material</div>
+                <div class="brand-subtitle">INVENTARIO DE PRECISIÓN</div>
             </div>
 
             <nav class="sidebar-nav">
                 <a href="{{ url_for('menu') }}" class="nav-item {% if request.endpoint == 'menu' %}active{% endif %}">
                     <i class="material-symbols-rounded">dashboard</i>
-                    DASHBOARD
+                    PANEL PRINCIPAL
                 </a>
                 <a href="{{ url_for('crear_material') }}" class="nav-item {% if request.endpoint == 'crear_material' %}active{% endif %}">
                     <i class="material-symbols-rounded">add_box</i>
-                    REGISTER MATERIAL
+                    NUEVO MATERIAL
                 </a>
                 <a href="{{ url_for('buscar_material') }}" class="nav-item {% if request.endpoint == 'buscar_material' %}active{% endif %}">
                     <i class="material-symbols-rounded">search</i>
-                    SEARCH
+                    BÚSQUEDA
                 </a>
                 <a href="{{ url_for('materiales_por_profesor') }}" class="nav-item {% if request.endpoint == 'materiales_por_profesor' %}active{% endif %}">
                     <i class="material-symbols-rounded">school</i>
-                    TEACHER INVENTORY
+                    POR PROFESOR
                 </a>
                 <a href="{{ url_for('listar_materiales') }}" class="nav-item {% if request.endpoint == 'listar_materiales' %}active{% endif %}">
                     <i class="material-symbols-rounded">inventory_2</i>
-                    GENERAL LIST
+                    LISTADO GENERAL
                 </a>
             </nav>
 
@@ -60,7 +60,7 @@
         <main class="main-content">
             <!-- TOPBAR -->
             <header class="topbar">
-                <div class="topbar-title">Precision Inventory</div>
+                <div class="topbar-title">Inventario de Laboratorio</div>
             </header>
 
             <!-- PAGE CONTENT -->

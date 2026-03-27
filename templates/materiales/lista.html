@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Lista de materiales{% endblock %}
+{% block title %}Lista General{% endblock %}
 
 {% block content %}
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
     <div>
-        <h1 class="page-title">General Inventory List</h1>
-        <p class="page-subtitle">Tracking all registered components across the laboratory.</p>
+        <h1 class="page-title">Inventario General</h1>
+        <p class="page-subtitle">Rastreo de todos los componentes registrados en el laboratorio.</p>
     </div>
     <div style="display: flex; gap: 12px; align-items: center;">
         <span style="font-weight: 600; font-size: 0.875rem; color: var(--neutral); background: var(--surface); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);">
-            Total Entries: {{ total_materiales }}
+            Total de Registros: {{ total_materiales }}
         </span>
         <a href="{{ url_for('crear_material') }}" class="btn btn-primary">
-            <i class="material-symbols-rounded">add</i> New Material
+            <i class="material-symbols-rounded">add</i> Añadir Material
         </a>
     </div>
 </div>
@@ -25,13 +25,13 @@
         <table>
             <thead>
                 <tr>
-                    <th>Serial No.</th>
-                    <th>Component Name</th>
+                    <th>Nº Serie</th>
+                    <th>Componente</th>
                     <th>Dr. / Prof.</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Assets</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                    <th>Archivos</th>
+                    <th style="text-align: right;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,21 +56,21 @@
                     <td>
                         <div style="display: flex; gap: 8px;">
                             {% if material.foto %}
-                                <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Photo: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Image">
+                                <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Foto: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Ver imagen">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
                                 </button>
                             {% else %}
-                                <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No Image">
+                                <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin imagen">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">image_not_supported</i>
                                 </button>
                             {% endif %}
 
                             {% if material.pdf_especificaciones %}
-                                <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Rules: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Specs">
+                                <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Archivo: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Especificaciones">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                 </button>
                             {% else %}
-                                <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No PDF">
+                                <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin PDF">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                 </button>
                             {% endif %}
@@ -78,10 +78,10 @@
                     </td>
                     <td style="text-align: right;">
                         <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
-                            Edit
+                            Editar
                         </a>
                         <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">
-                            Delete
+                            Eliminar
                         </button>
                     </td>
                 </tr>
@@ -92,8 +92,8 @@
     {% else %}
         <div style="padding: 40px; text-align: center; color: var(--text-muted);">
             <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">inventory_2</i>
-            <h3>No records found</h3>
-            <p>Your inventory is empty. Start by registering your first material.</p>
+            <h3>No hay registros</h3>
+            <p>El inventario está vacío. Empieza registrando el primer material.</p>
         </div>
     {% endif %}
 </div>

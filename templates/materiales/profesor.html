@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Teacher Inventory{% endblock %}
+{% block title %}Inventario por Profesor{% endblock %}
 
 {% block content %}
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
     <div>
-        <h1 class="page-title">Teacher Inventory</h1>
-        <p class="page-subtitle">Tracking components across assigned laboratory staff.</p>
+        <h1 class="page-title">Inventario por Profesor</h1>
+        <p class="page-subtitle">Rastrea la asignación de componentes por personal del laboratorio.</p>
     </div>
 </div>
 
 <div class="card" style="padding: 24px;">
     <form method="POST" id="formProfesor" novalidate style="display: flex; gap: 16px; align-items: flex-end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label for="doctor_responsable" class="form-label">Search or select Professor</label>
+            <label for="doctor_responsable" class="form-label">Buscar o seleccionar Profesor</label>
             <div style="position: relative;">
                 <i class="material-symbols-rounded" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">person_search</i>
-                <input list="lista_profesores" class="form-control" name="doctor_responsable" id="doctor_responsable" value="{{ profesor_buscado }}" placeholder="Type here..." required style="padding-left:48px;">
+                <input list="lista_profesores" class="form-control" name="doctor_responsable" id="doctor_responsable" value="{{ profesor_buscado }}" placeholder="Ingresa nombre aquí..." required style="padding-left:48px;">
             </div>
             
             <datalist id="lista_profesores">
@@ -26,7 +26,7 @@
                 {% endfor %}
             </datalist>
         </div>
-        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">filter_alt</i> Filter</button>
+        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">filter_alt</i> Filtrar</button>
     </form>
     <div id="erroresProfesor" style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;"></div>
     {% if error %}
@@ -39,7 +39,7 @@
         <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
             <i class="material-symbols-rounded">person</i>
         </div> 
-        Results for: <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
+        Resultados para: <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
     </h3>
 
     {% if resultados %}
@@ -48,12 +48,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Serial No.</th>
-                            <th>Component Name</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Assets</th>
-                            <th style="text-align: right;">Actions</th>
+                            <th>Nº Serie</th>
+                            <th>Componente</th>
+                            <th>Ubicación</th>
+                            <th>Estado</th>
+                            <th>Archivos</th>
+                            <th style="text-align: right;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,29 +77,29 @@
                             <td>
                                 <div style="display: flex; gap: 8px;">
                                     {% if material.foto %}
-                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Photo: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Image">
+                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Foto: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Ver imagen">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No Image">
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin imagen">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image_not_supported</i>
                                         </button>
                                     {% endif %}
 
                                     {% if material.pdf_especificaciones %}
-                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Rules: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Specs">
+                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Archivo: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Especificaciones">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No PDF">
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin PDF">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                         </button>
                                     {% endif %}
                                 </div>
                             </td>
                             <td style="text-align: right;">
-                                <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Edit</a>
-                                <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Delete</button>
+                                <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Editar</a>
+                                <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Eliminar</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -110,8 +110,8 @@
     {% else %}
         <div style="padding: 40px; text-align: center; color: var(--text-muted); background:var(--surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg);">
             <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">group_off</i>
-            <h3>No inventory</h3>
-            <p>No materials assigned to this professor.</p>
+            <h3>Sin inventario</h3>
+            <p>No se encontraron componentes asignados a este profesor.</p>
         </div>
     {% endif %}
 {% endif %}
