@@ -3,7 +3,8 @@
 {% block title %}Registrar Material{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px;">
+<div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+<div style="flex: 1; min-width: 300px; max-width: 800px;">
     <h1 class="page-title">Registrar Nuevo Material</h1>
     <p class="page-subtitle">Introduce las especificaciones técnicas para el nuevo componente físico o electrónico.</p>
 
@@ -94,5 +95,10 @@
             </div>
         </form>
     </div>
+</div>
+
+<div style="flex: 1; display: flex; justify-content: center; min-width: 300px; position: sticky; top: 40px;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}" alt="Ilustración Laboratorio" style="max-width: 750px; width: 100%; height: auto; opacity: 0.35; margin-top: 40px;">
+</div>
 </div>
 {% endblock %}

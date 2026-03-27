@@ -3,7 +3,8 @@
 {% block title %}Editar Material{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px;">
+<div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+<div style="flex: 1; min-width: 300px; max-width: 800px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
         <div>
             <h1 class="page-title">Editar Material</h1>
@@ -107,5 +108,10 @@
             </div>
         </form>
     </div>
+</div>
+
+<div style="flex: 1; display: flex; justify-content: center; min-width: 300px; position: sticky; top: 40px;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}" alt="Ilustración Laboratorio" style="max-width: 750px; width: 100%; height: auto; opacity: 0.35; margin-top: 40px;">
+</div>
 </div>
 {% endblock %}
