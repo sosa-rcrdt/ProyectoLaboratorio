@@ -140,6 +140,12 @@ if (formCrear) {
         if (esVacio(marca)) errores.push("La marca es obligatoria.");
         if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
         if (esVacio(anio)) errores.push("El año es obligatorio.");
+        
+        const anioActual = new Date().getFullYear();
+        if (!esVacio(anio) && parseInt(anio) > anioActual) {
+            errores.push("El año no puede ser mayor al actual.");
+        }
+
         if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
         if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
 
@@ -178,6 +184,10 @@ if (formEditar) {
         if (esVacio(marca)) errores.push("La marca es obligatoria.");
         if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
         if (esVacio(anio)) errores.push("El año es obligatorio.");
+        const anioActual = new Date().getFullYear();
+        if (!esVacio(anio) && parseInt(anio) > anioActual) {
+            errores.push("El año no puede ser mayor al actual.");
+        }
         if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
         if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
 

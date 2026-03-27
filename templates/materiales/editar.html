@@ -48,7 +48,7 @@
 
                 <div class="form-group">
                     <label for="anio" class="form-label">Año</label>
-                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', material.anio) }}" required>
+                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', material.anio) }}" max="{{ current_year }}" required>
                 </div>
             </div>
 

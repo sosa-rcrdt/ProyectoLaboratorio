@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from werkzeug.utils import secure_filename
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_laboratorio"
@@ -63,6 +64,7 @@ def listar_materiales():
 # CREAR MATERIAL
 @app.route("/materiales/crear", methods=["GET", "POST"])
 def crear_material():
+    current_year = datetime.now().year
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
     error = None
 
@@ -95,6 +97,8 @@ def crear_material():
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
+        elif int(anio) > datetime.now().year:
+            error = "El año no puede ser mayor al actual."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
         elif Material.query.filter_by(numero_serie=numero_serie).first():
@@ -121,14 +125,17 @@ def crear_material():
             "materiales/crear.html",
             error=error,
             estados_validos=estados_validos,
-            datos=request.form
+            datos=request.form,
+            current_year=current_year
+            
         )
 
     return render_template(
         "materiales/crear.html",
         error=error,
         estados_validos=estados_validos,
-        datos={}
+        datos={},
+        current_year=datetime.now().year
     )
 
 # BUSCAR MATERIAL
@@ -187,6 +194,7 @@ def materiales_por_profesor():
 #EDITAR MATERIAL
 @app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
 def editar_material(id):
+    current_year = datetime.now().year
     material = Material.query.get_or_404(id)
 
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
@@ -208,6 +216,8 @@ def editar_material(id):
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
+        elif int(anio) > datetime.now().year:
+            error = "El año no puede ser mayor al actual."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
         else:
@@ -245,7 +255,8 @@ def editar_material(id):
             material=material,
             error=error,
             estados_validos=estados_validos,
-            datos=request.form
+            datos=request.form,
+            current_year = datetime.now().year
         )
 
     return render_template(
@@ -253,7 +264,8 @@ def editar_material(id):
         material=material,
         error=error,
         estados_validos=estados_validos,
-        datos={}
+        datos={},
+        current_year=datetime.now().year
     )
 
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
