@@ -14,15 +14,20 @@ document.addEventListener("DOMContentLoaded", function () {
             modalTitulo.textContent = titulo;
             modalBody.innerHTML = "";
 
+            let archivoUrl = archivo;
+            if (archivoUrl && !archivoUrl.startsWith("http") && !archivoUrl.startsWith("/")) {
+                archivoUrl = "/static/" + archivoUrl;
+            }
+
             if (tipo === "foto") {
                 modalBody.innerHTML = `
-                    <img src="${archivo}" alt="${titulo}" class="modal-imagen">
+                    <img src="${archivoUrl}" alt="${titulo}" class="modal-imagen">
                 `;
             }
 
             if (tipo === "pdf") {
                 modalBody.innerHTML = `
-                    <iframe src="${archivo}" class="modal-pdf"></iframe>
+                    <iframe src="${archivoUrl}" class="modal-pdf"></iframe>
                 `;
             }
 
@@ -81,150 +86,150 @@ window.addEventListener("click", function (event) {
     }
 });
 
- // ===== FUNCIONES AUXILIARES DE VALIDACIÓN =====
-    function limpiarErrores(contenedor) {
-        if (contenedor) {
-            contenedor.innerHTML = "";
+// ===== FUNCIONES AUXILIARES DE VALIDACIÓN =====
+function limpiarErrores(contenedor) {
+    if (contenedor) {
+        contenedor.innerHTML = "";
+    }
+}
+
+function mostrarErrores(contenedor, errores) {
+    if (!contenedor) return;
+
+    if (errores.length === 0) {
+        contenedor.innerHTML = "";
+        return;
+    }
+
+    let html = "<ul>";
+    errores.forEach((error) => {
+        html += `<li>${error}</li>`;
+    });
+    html += "</ul>";
+
+    contenedor.innerHTML = html;
+}
+
+function esVacio(valor) {
+    return !valor || valor.trim() === "";
+}
+
+// ===== VALIDACIÓN CREAR =====
+const formCrear = document.getElementById("formCrearMaterial");
+const erroresCrear = document.getElementById("erroresCrear");
+
+if (formCrear) {
+    formCrear.addEventListener("submit", function (event) {
+        const errores = [];
+
+        const errorBackendCrear = document.getElementById("errorBackendCrear");
+        if (errorBackendCrear) {
+            errorBackendCrear.style.display = "none";
         }
-    }
 
-    function mostrarErrores(contenedor, errores) {
-        if (!contenedor) return;
+        const numeroSerie = document.getElementById("numero_serie")?.value || "";
+        const nombreMaterial = document.getElementById("nombre_material")?.value || "";
+        const marca = document.getElementById("marca")?.value || "";
+        const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
+        const anio = document.getElementById("anio")?.value || "";
+        const ubicacion = document.getElementById("ubicacion")?.value || "";
+        const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
 
-        if (errores.length === 0) {
-            contenedor.innerHTML = "";
-            return;
+        if (esVacio(numeroSerie)) errores.push("El número de serie es obligatorio.");
+        if (esVacio(nombreMaterial)) errores.push("El nombre del material es obligatorio.");
+        if (esVacio(marca)) errores.push("La marca es obligatoria.");
+        if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
+        if (esVacio(anio)) errores.push("El año es obligatorio.");
+        if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
+        if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
+
+        if (errores.length > 0) {
+            event.preventDefault();
+            mostrarErrores(erroresCrear, errores);
+        } else {
+            limpiarErrores(erroresCrear);
+        }
+    });
+}
+
+// ===== VALIDACIÓN EDITAR =====
+const formEditar = document.getElementById("formEditarMaterial");
+const erroresEditar = document.getElementById("erroresEditar");
+
+if (formEditar) {
+    formEditar.addEventListener("submit", function (event) {
+        const errores = [];
+
+        const errorBackendEditar = document.getElementById("errorBackendEditar");
+        if (errorBackendEditar) {
+            errorBackendEditar.style.display = "none";
         }
 
-        let html = "<ul>";
-        errores.forEach((error) => {
-            html += `<li>${error}</li>`;
-        });
-        html += "</ul>";
+        const numeroSerie = document.getElementById("numero_serie")?.value || "";
+        const nombreMaterial = document.getElementById("nombre_material")?.value || "";
+        const marca = document.getElementById("marca")?.value || "";
+        const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
+        const anio = document.getElementById("anio")?.value || "";
+        const ubicacion = document.getElementById("ubicacion")?.value || "";
+        const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
 
-        contenedor.innerHTML = html;
-    }
+        if (esVacio(numeroSerie)) errores.push("El número de serie es obligatorio.");
+        if (esVacio(nombreMaterial)) errores.push("El nombre del material es obligatorio.");
+        if (esVacio(marca)) errores.push("La marca es obligatoria.");
+        if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
+        if (esVacio(anio)) errores.push("El año es obligatorio.");
+        if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
+        if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
 
-    function esVacio(valor) {
-        return !valor || valor.trim() === "";
-    }
+        if (errores.length > 0) {
+            event.preventDefault();
+            mostrarErrores(erroresEditar, errores);
+        } else {
+            limpiarErrores(erroresEditar);
+        }
+    });
+}
 
-    // ===== VALIDACIÓN CREAR =====
-    const formCrear = document.getElementById("formCrearMaterial");
-    const erroresCrear = document.getElementById("erroresCrear");
+// ===== VALIDACIÓN BUSCAR =====
+const formBuscar = document.getElementById("formBuscarMaterial");
+const erroresBuscar = document.getElementById("erroresBuscar");
 
-    if (formCrear) {
-        formCrear.addEventListener("submit", function (event) {
-            const errores = [];
+if (formBuscar) {
+    formBuscar.addEventListener("submit", function (event) {
+        const errores = [];
+        const busqueda = formBuscar.querySelector('input[name="busqueda"]')?.value || "";
 
-            const errorBackendCrear = document.getElementById("errorBackendCrear");
-            if (errorBackendCrear) {
-                errorBackendCrear.style.display = "none";
-            }
+        if (esVacio(busqueda)) {
+            errores.push("Debes escribir el numero de serie o nombre para buscar.");
+        }
 
-            const numeroSerie = document.getElementById("numero_serie")?.value || "";
-            const nombreMaterial = document.getElementById("nombre_material")?.value || "";
-            const marca = document.getElementById("marca")?.value || "";
-            const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
-            const anio = document.getElementById("anio")?.value || "";
-            const ubicacion = document.getElementById("ubicacion")?.value || "";
-            const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
+        if (errores.length > 0) {
+            event.preventDefault();
+            mostrarErrores(erroresBuscar, errores);
+        } else {
+            limpiarErrores(erroresBuscar);
+        }
+    });
+}
 
-            if (esVacio(numeroSerie)) errores.push("El número de serie es obligatorio.");
-            if (esVacio(nombreMaterial)) errores.push("El nombre del material es obligatorio.");
-            if (esVacio(marca)) errores.push("La marca es obligatoria.");
-            if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
-            if (esVacio(anio)) errores.push("Debes seleccionar un año.");
-            if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
-            if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
+// ===== VALIDACIÓN PROFESOR =====
+const formProfesor = document.getElementById("formProfesor");
+const erroresProfesor = document.getElementById("erroresProfesor");
 
-            if (errores.length > 0) {
-                event.preventDefault();
-                mostrarErrores(erroresCrear, errores);
-            } else {
-                limpiarErrores(erroresCrear);
-            }
-        });
-    }
+if (formProfesor) {
+    formProfesor.addEventListener("submit", function (event) {
+        const errores = [];
+        const profesor = document.getElementById("doctor_responsable")?.value || "";
 
-    // ===== VALIDACIÓN EDITAR =====
-    const formEditar = document.getElementById("formEditarMaterial");
-    const erroresEditar = document.getElementById("erroresEditar");
+        if (esVacio(profesor)) {
+            errores.push("Debes seleccionar o escribir un profesor.");
+        }
 
-    if (formEditar) {
-        formEditar.addEventListener("submit", function (event) {
-            const errores = [];
-
-            const errorBackendEditar = document.getElementById("errorBackendEditar");
-            if (errorBackendEditar) {
-                errorBackendEditar.style.display = "none";
-            }
-
-            const numeroSerie = document.getElementById("numero_serie")?.value || "";
-            const nombreMaterial = document.getElementById("nombre_material")?.value || "";
-            const marca = document.getElementById("marca")?.value || "";
-            const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
-            const anio = document.getElementById("anio")?.value || "";
-            const ubicacion = document.getElementById("ubicacion")?.value || "";
-            const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
-
-            if (esVacio(numeroSerie)) errores.push("El número de serie es obligatorio.");
-            if (esVacio(nombreMaterial)) errores.push("El nombre del material es obligatorio.");
-            if (esVacio(marca)) errores.push("La marca es obligatoria.");
-            if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
-            if (esVacio(anio)) errores.push("Debes seleccionar un año.");
-            if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
-            if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
-
-            if (errores.length > 0) {
-                event.preventDefault();
-                mostrarErrores(erroresEditar, errores);
-            } else {
-                limpiarErrores(erroresEditar);
-            }
-        });
-    }
-
-    // ===== VALIDACIÓN BUSCAR =====
-    const formBuscar = document.getElementById("formBuscarMaterial");
-    const erroresBuscar = document.getElementById("erroresBuscar");
-
-    if (formBuscar) {
-        formBuscar.addEventListener("submit", function (event) {
-            const errores = [];
-            const busqueda = formBuscar.querySelector('input[name="busqueda"]')?.value || "";
-
-            if (esVacio(busqueda)) {
-                errores.push("Debes escribir el numero de serie o nombre para buscar.");
-            }
-
-            if (errores.length > 0) {
-                event.preventDefault();
-                mostrarErrores(erroresBuscar, errores);
-            } else {
-                limpiarErrores(erroresBuscar);
-            }
-        });
-    }
-
-    // ===== VALIDACIÓN PROFESOR =====
-    const formProfesor = document.getElementById("formProfesor");
-    const erroresProfesor = document.getElementById("erroresProfesor");
-
-    if (formProfesor) {
-        formProfesor.addEventListener("submit", function (event) {
-            const errores = [];
-            const profesor = document.getElementById("doctor_responsable")?.value || "";
-
-            if (esVacio(profesor)) {
-                errores.push("Debes seleccionar o escribir un profesor.");
-            }
-
-            if (errores.length > 0) {
-                event.preventDefault();
-                mostrarErrores(erroresProfesor, errores);
-            } else {
-                limpiarErrores(erroresProfesor);
-            }
-        });
-    }
+        if (errores.length > 0) {
+            event.preventDefault();
+            mostrarErrores(erroresProfesor, errores);
+        } else {
+            limpiarErrores(erroresProfesor);
+        }
+    });
+}

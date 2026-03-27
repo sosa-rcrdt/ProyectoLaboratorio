@@ -1,73 +1,98 @@
 {% extends "base.html" %}
 
-{% block title %}Menú principal{% endblock %}
+{% block title %}Registrar Material{% endblock %}
 
 {% block content %}
-
-    <h1>Registrar nuevo material</h1>
-
-    <a href="{{ url_for('menu') }}">Volver al menú</a>
-    <br><br>
+<div style="max-width: 800px;">
+    <h1 class="page-title">Register New Material</h1>
+    <p class="page-subtitle">Enter the technical specifications for the new physical/electronic component.</p>
 
     {% if error %}
-        <p id="errorBackendCrear" style="color:red;"><strong>{{ error }}</strong></p>
+        <div class="mensaje-flash error" id="errorBackendCrear">
+            <i class="material-symbols-rounded" style="vertical-align: bottom; margin-right: 4px;">error</i>
+            <strong>{{ error }}</strong>
+        </div>
     {% endif %}
 
-    
+    <div class="card">
+        <form method="POST" id="formCrearMaterial" enctype="multipart/form-data" novalidate>
+            <div id="erroresCrear" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
+            
+            <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">settings_input_component</i> Component Identity
+            </h3>
 
-    <form method="POST" id="formCrearMaterial" novalidate>
-        <div id="erroresCrear" style="color:red;"></div>
-        <label for="numero_serie">Número de serie:</label><br>
-        <input type="text" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', '') }}" required>
-        <br><br>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="nombre_material" class="form-label">Material Name</label>
+                    <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', '') }}" placeholder="e.g. STM32 Nucleo-64" required>
+                </div>
 
-        <label for="nombre_material">Nombre del material:</label><br>
-        <input type="text" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', '') }}" required>
-        <br><br>
+                <div class="form-group">
+                    <label for="numero_serie" class="form-label">Serial Number</label>
+                    <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', '') }}" placeholder="SN-XXXX-XXXX" required>
+                </div>
+            </div>
 
-        <label for="marca">Marca:</label><br>
-        <input type="text" id="marca" name="marca" value="{{ datos.get('marca', '') }}" required>
-        <br><br>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="marca" class="form-label">Brand / Manufacturer</label>
+                    <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', '') }}" placeholder="e.g. STMicroelectronics" required>
+                </div>
 
-        <label for="doctor_responsable">Doctor responsable:</label><br>
-        <input type="text" id="doctor_responsable" name="doctor_responsable" value="{{ datos.get('doctor_responsable', '') }}" required>
-        <br><br>
+                <div class="form-group">
+                    <label for="anio" class="form-label">Year</label>
+                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', '') }}" placeholder="e.g. 2024" required>
+                </div>
+            </div>
 
-        <label for="anio">Año:</label><br>
-        <select id="anio" name="anio" required>
-            <option value="">Selecciona un año</option>
-            {% for anio in anios %}
-                <option value="{{ anio }}" {% if datos.get('anio', '') == anio|string %}selected{% endif %}>
-                    {{ anio }}
-                </option>
-            {% endfor %}
-        </select>
-        <br><br>
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">warehouse</i> Storage & Assignment
+            </h3>
 
-        <label for="ubicacion">Ubicación:</label><br>
-        <input type="text" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', '') }}" required>
-        <br><br>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="doctor_responsable" class="form-label">Assigned Teacher/Dr.</label>
+                    <input type="text" class="form-control" id="doctor_responsable" name="doctor_responsable" value="{{ datos.get('doctor_responsable', '') }}" placeholder="e.g. Dr. Sarah Jenkins" required>
+                </div>
 
-        <label for="estado_prestamo">Estado del préstamo:</label><br>
-        <select id="estado_prestamo" name="estado_prestamo" required>
-            <option value="">Selecciona un estado</option>
-            {% for estado in estados_validos %}
-                <option value="{{ estado }}" {% if datos.get('estado_prestamo', '') == estado %}selected{% endif %}>
-                    {{ estado }}
-                </option>
-            {% endfor %}
-        </select>
-        <br><br>
+                <div class="form-group">
+                    <label for="ubicacion" class="form-label">Storage Location</label>
+                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', '') }}" placeholder="e.g. Aisle 4, Shelf B2" required>
+                </div>
+            </div>
 
-        <label for="foto">Ruta o URL de la foto (opcional):</label><br>
-        <input type="text" id="foto" name="foto" value="{{ datos.get('foto', '') }}">
-        <br><br>
+            <div class="form-group">
+                <label for="estado_prestamo" class="form-label">Status</label>
+                <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
+                    <option value="">Select Status</option>
+                    {% for estado in estados_validos %}
+                        <option value="{{ estado }}" {% if datos.get('estado_prestamo', '') == estado %}selected{% endif %}>{{ estado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <label for="pdf_especificaciones">Ruta o URL del PDF (opcional):</label><br>
-        <input type="text" id="pdf_especificaciones" name="pdf_especificaciones" value="{{ datos.get('pdf_especificaciones', '') }}">
-        <br><br>
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">description</i> Documentation & Assets
+            </h3>
 
-        <button type="submit">Guardar material</button>
-    </form>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="foto" class="form-label">Photo Upload (Image)</label>
+                    <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+                </div>
 
+                <div class="form-group">
+                    <label for="pdf_especificaciones" class="form-label">PDF Upload (Specs)</label>
+                    <input type="file" class="form-control" id="pdf_especificaciones" name="pdf_especificaciones" accept="application/pdf">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                <a href="{{ url_for('menu') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">Register Component</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

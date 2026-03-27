@@ -1,14 +1,72 @@
 {% extends "base.html" %}
 
-{% block title %}Menú principal{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>Menú general</h1>
+<h1 class="page-title">Global Inventory Status</h1>
+<p class="page-subtitle">Welcome to Precision Inventory Dashboard</p>
 
-<ul>
-    <li><a href="{{ url_for('crear_material') }}">Registrar material</a></li>
-    <li><a href="{{ url_for('buscar_material') }}">Buscar material por número de serie o nombre</a></li>
-    <li><a href="{{ url_for('materiales_por_profesor') }}">Ver materiales por profesor</a></li>
-    <li><a href="{{ url_for('listar_materiales') }}">Ver todos los materiales</a></li>
-</ul>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
+    
+    <!-- Card 1 -->
+    <a href="{{ url_for('crear_material') }}" style="text-decoration:none; color:inherit;">
+    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+            <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
+                <i class="material-symbols-rounded" style="font-size: 32px;">add_box</i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Register Material</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Add new components to stock</p>
+            </div>
+        </div>
+    </div>
+    </a>
+
+    <!-- Card 2 -->
+    <a href="{{ url_for('buscar_material') }}" style="text-decoration:none; color:inherit;">
+    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+            <div style="background: #E0E7FF; color: #4338CA; padding: 16px; border-radius: var(--radius-md);">
+                <i class="material-symbols-rounded" style="font-size: 32px;">search</i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Search Inventory</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Find by serial or name</p>
+            </div>
+        </div>
+    </div>
+    </a>
+
+    <!-- Card 3 -->
+    <a href="{{ url_for('materiales_por_profesor') }}" style="text-decoration:none; color:inherit;">
+    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+            <div style="background: #FEF3C7; color: #D97706; padding: 16px; border-radius: var(--radius-md);">
+                <i class="material-symbols-rounded" style="font-size: 32px;">school</i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Teacher Inventory</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Filter materials by staff</p>
+            </div>
+        </div>
+    </div>
+    </a>
+
+    <!-- Card 4 -->
+    <a href="{{ url_for('listar_materiales') }}" style="text-decoration:none; color:inherit;">
+    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+            <div style="background: #DCFCE7; color: #15803D; padding: 16px; border-radius: var(--radius-md);">
+                <i class="material-symbols-rounded" style="font-size: 32px;">list_alt</i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">General List</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">View all registry</p>
+            </div>
+        </div>
+    </div>
+    </a>
+</div>
+
 {% endblock %}

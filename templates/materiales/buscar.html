@@ -4,100 +4,102 @@
 
 {% block content %}
 
-<h1>Buscar material</h1>
+<h1 class="page-title">Advanced Search</h1>
+<p class="page-subtitle">Locate electronic components and hardware materials across the precision ecosystem using multi-parameter queries.</p>
 
-<a href="{{ url_for('menu') }}">Volver al menú</a>
-<br><br>
-
-<form method="POST" id="formBuscarMaterial" novalidate>
-    <div id="erroresBuscar" style="color:red;"></div>
-    <label>Buscar por número de serie o nombre:</label><br>
-    <input type="text" name="busqueda" value="{{ busqueda }}" required>
-    <button type="submit">Buscar</button>
-</form>
-
-<br>
-
-{% if error %}
-<p style="color:red">{{ error }}</p>
-{% endif %}
+<div class="card" style="padding: 24px; background: var(--surface);">
+    <form method="POST" id="formBuscarMaterial" novalidate style="display: flex; gap: 16px; align-items: flex-end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label class="form-label" style="display:none;">Buscar por número de serie o nombre:</label>
+            <div style="position: relative;">
+                <i class="material-symbols-rounded" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">search</i>
+                <input type="text" class="form-control" name="busqueda" value="{{ busqueda }}" placeholder="Search by name or serial number..." required style="padding-left:48px;">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">filter_list</i> Buscar</button>
+    </form>
+    <div id="erroresBuscar" style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;"></div>
+    {% if error %}
+        <p style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">{{ error }}</p>
+    {% endif %}
+</div>
 
 {% if busqueda %}
-    <h3>Resultados para: "{{ busqueda }}"</h3>
+    <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main);">Resultados para: "<span style="color:var(--primary);">{{ busqueda }}</span>"</h3>
 
     {% if resultados %}
-        <table border="1" cellpadding="8" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Número de serie</th>
-                    <th>Nombre</th>
-                    <th>Marca</th>
-                    <th>Doctor responsable</th>
-                    <th>Año</th>
-                    <th>Ubicación</th>
-                    <th>Estado</th>
-                    <th>Foto</th>
-                    <th>PDF</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for material in resultados %}
-                <tr>
-                    <td>{{ material.numero_serie }}</td>
-                    <td>{{ material.nombre_material }}</td>
-                    <td>{{ material.marca }}</td>
-                    <td>{{ material.doctor_responsable }}</td>
-                    <td>{{ material.anio }}</td>
-                    <td>{{ material.ubicacion }}</td>
-                    <td>{{ material.estado_prestamo }}</td>
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-wrapper" style="border:none; border-radius: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serial No.</th>
+                            <th>Component Name</th>
+                            <th>Dr. / Prof.</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Assets</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for material in resultados %}
+                        <tr>
+                            <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie }}</td>
+                            <td>
+                                <div style="font-weight: 600;">{{ material.nombre_material }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ material.marca }} • {{ material.anio }}</div>
+                            </td>
+                            <td>{{ material.doctor_responsable }}</td>
+                            <td>{{ material.ubicacion }}</td>
+                            <td>
+                                <span class="status-badge 
+                                    {% if material.estado_prestamo == 'Disponible' %}disponible
+                                    {% elif material.estado_prestamo == 'En préstamo' %}prestamo
+                                    {% elif material.estado_prestamo == 'Fuera de servicio' %}fuera
+                                    {% else %}mantenimiento{% endif %}">
+                                    {{ material.estado_prestamo }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    {% if material.foto %}
+                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Photo: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Image">
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
+                                        </button>
+                                    {% else %}
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No Image">
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">image_not_supported</i>
+                                        </button>
+                                    {% endif %}
 
-                    <td>
-                        {% if material.foto %}
-                            <button type="button"
-                                    class="btn-modal"
-                                    data-tipo="foto"
-                                    data-titulo="Foto de {{ material.nombre_material }}"
-                                    data-archivo="{{ material.foto }}">
-                                Ver foto
-                            </button>
-                        {% else %}
-                            Sin foto
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if material.pdf_especificaciones %}
-                            <button type="button"
-                                    class="btn-modal"
-                                    data-tipo="pdf"
-                                    data-titulo="PDF de {{ material.nombre_material }}"
-                                    data-archivo="{{ material.pdf_especificaciones }}">
-                                Ver PDF
-                            </button>
-                        {% else %}
-                            Sin PDF
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        <a href="{{ url_for('editar_material', id=material.id) }}">
-                            <button type="button">Editar</button>
-                        </a>
-                        |
-                        <button type="button"
-                                class="btn-eliminar"
-                                data-id="{{ material.id }}"
-                                data-nombre="{{ material.nombre_material }}">
-                            Eliminar
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                                    {% if material.pdf_especificaciones %}
+                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Rules: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Specs">
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                        </button>
+                                    {% else %}
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="No PDF">
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Edit</a>
+                                <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     {% else %}
-        <p>No se encontraron materiales.</p>
+        <div style="padding: 40px; text-align: center; color: var(--text-muted); background:var(--surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg);">
+            <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">search_off</i>
+            <h3>No results found</h3>
+            <p>We couldn't find any materials matching that query.</p>
+        </div>
     {% endif %}
 {% endif %}
 

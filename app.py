@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
-
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_laboratorio"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+
+UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "database.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -45,7 +50,6 @@ def listar_materiales():
 @app.route("/materiales/crear", methods=["GET", "POST"])
 def crear_material():
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
-    anios = list(range(2000, 2031))
     error = None
 
     if request.method == "POST":
@@ -57,15 +61,26 @@ def crear_material():
         ubicacion = request.form["ubicacion"].strip()
         estado_prestamo = request.form["estado_prestamo"].strip()
 
-        foto = request.form.get("foto", "").strip()
-        pdf_especificaciones = request.form.get("pdf_especificaciones", "").strip()
+        # Handle Files
+        foto_file = request.files.get("foto")
+        pdf_file = request.files.get("pdf_especificaciones")
+        foto_path = None
+        pdf_path = None
+
+        if foto_file and foto_file.filename:
+            filename = secure_filename(foto_file.filename)
+            foto_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            foto_path = f"uploads/{filename}"
+
+        if pdf_file and pdf_file.filename:
+            filename = secure_filename(pdf_file.filename)
+            pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            pdf_path = f"uploads/{filename}"
 
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
-        elif int(anio) not in anios:
-            error = "El año seleccionado no es válido."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
         elif Material.query.filter_by(numero_serie=numero_serie).first():
@@ -74,13 +89,13 @@ def crear_material():
             nuevo_material = Material(
                 numero_serie=numero_serie,
                 marca=marca,
-                foto=foto if foto else None,
+                foto=foto_path,
                 doctor_responsable=doctor_responsable,
                 nombre_material=nombre_material,
                 anio=int(anio),
                 ubicacion=ubicacion,
                 estado_prestamo=estado_prestamo,
-                pdf_especificaciones=pdf_especificaciones if pdf_especificaciones else None
+                pdf_especificaciones=pdf_path
             )
 
             db.session.add(nuevo_material)
@@ -92,7 +107,6 @@ def crear_material():
             "materiales/crear.html",
             error=error,
             estados_validos=estados_validos,
-            anios=anios,
             datos=request.form
         )
 
@@ -100,7 +114,6 @@ def crear_material():
         "materiales/crear.html",
         error=error,
         estados_validos=estados_validos,
-        anios=anios,
         datos={}
     )
 
@@ -163,7 +176,6 @@ def editar_material(id):
     material = Material.query.get_or_404(id)
 
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
-    anios = list(range(2000, 2031))
     error = None
 
     if request.method == "POST":
@@ -175,15 +187,13 @@ def editar_material(id):
         ubicacion = request.form["ubicacion"].strip()
         estado_prestamo = request.form["estado_prestamo"].strip()
 
-        foto = request.form.get("foto", "").strip()
-        pdf_especificaciones = request.form.get("pdf_especificaciones", "").strip()
+        foto_file = request.files.get("foto")
+        pdf_file = request.files.get("pdf_especificaciones")
 
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
-        elif int(anio) not in anios:
-            error = "El año seleccionado no es válido."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
         else:
@@ -199,8 +209,16 @@ def editar_material(id):
                 material.anio = int(anio)
                 material.ubicacion = ubicacion
                 material.estado_prestamo = estado_prestamo
-                material.foto = foto if foto else None
-                material.pdf_especificaciones = pdf_especificaciones if pdf_especificaciones else None
+
+                if foto_file and foto_file.filename:
+                    filename = secure_filename(foto_file.filename)
+                    foto_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    material.foto = f"uploads/{filename}"
+
+                if pdf_file and pdf_file.filename:
+                    filename = secure_filename(pdf_file.filename)
+                    pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    material.pdf_especificaciones = f"uploads/{filename}"
 
                 db.session.commit()
                 flash("Material actualizado correctamente.", "success")
@@ -211,7 +229,6 @@ def editar_material(id):
             material=material,
             error=error,
             estados_validos=estados_validos,
-            anios=anios,
             datos=request.form
         )
 
@@ -220,7 +237,6 @@ def editar_material(id):
         material=material,
         error=error,
         estados_validos=estados_validos,
-        anios=anios,
         datos={}
     )
 
