@@ -8,9 +8,23 @@ app.secret_key = "clave_secreta_laboratorio"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+FOTOS_FOLDER = os.path.join(basedir, 'static', 'uploads', 'fotos')
+PDFS_FOLDER = os.path.join(basedir, 'static', 'uploads', 'pdfs')
+app.config['FOTOS_FOLDER'] = FOTOS_FOLDER
+app.config['PDFS_FOLDER'] = PDFS_FOLDER
+os.makedirs(FOTOS_FOLDER, exist_ok=True)
+os.makedirs(PDFS_FOLDER, exist_ok=True)
+
+def eliminar_archivo_local(ruta_relativa):
+    if not ruta_relativa:
+        return
+    if not str(ruta_relativa).startswith('http'):
+        path_absoluta = os.path.join(basedir, 'static', ruta_relativa)
+        if os.path.exists(path_absoluta):
+            try:
+                os.remove(path_absoluta)
+            except Exception as e:
+                print(f"Error al eliminar {path_absoluta}: {e}")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "database.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -69,13 +83,13 @@ def crear_material():
 
         if foto_file and foto_file.filename:
             filename = secure_filename(foto_file.filename)
-            foto_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            foto_path = f"uploads/{filename}"
+            foto_file.save(os.path.join(app.config['FOTOS_FOLDER'], filename))
+            foto_path = f"uploads/fotos/{filename}"
 
         if pdf_file and pdf_file.filename:
             filename = secure_filename(pdf_file.filename)
-            pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            pdf_path = f"uploads/{filename}"
+            pdf_file.save(os.path.join(app.config['PDFS_FOLDER'], filename))
+            pdf_path = f"uploads/pdfs/{filename}"
 
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
@@ -211,14 +225,16 @@ def editar_material(id):
                 material.estado_prestamo = estado_prestamo
 
                 if foto_file and foto_file.filename:
+                    eliminar_archivo_local(material.foto)
                     filename = secure_filename(foto_file.filename)
-                    foto_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    material.foto = f"uploads/{filename}"
+                    foto_file.save(os.path.join(app.config['FOTOS_FOLDER'], filename))
+                    material.foto = f"uploads/fotos/{filename}"
 
                 if pdf_file and pdf_file.filename:
+                    eliminar_archivo_local(material.pdf_especificaciones)
                     filename = secure_filename(pdf_file.filename)
-                    pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    material.pdf_especificaciones = f"uploads/{filename}"
+                    pdf_file.save(os.path.join(app.config['PDFS_FOLDER'], filename))
+                    material.pdf_especificaciones = f"uploads/pdfs/{filename}"
 
                 db.session.commit()
                 flash("Material actualizado correctamente.", "success")
@@ -243,6 +259,8 @@ def editar_material(id):
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
 def eliminar_material(id):
         material = Material.query.get_or_404(id)
+        eliminar_archivo_local(material.foto)
+        eliminar_archivo_local(material.pdf_especificaciones)
         db.session.delete(material)
         db.session.commit()
         flash("Material eliminado correctamente.", "success")
