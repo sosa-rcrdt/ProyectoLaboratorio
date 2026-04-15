@@ -93,6 +93,11 @@ def crear_material():
         numero_serie = request.form["numero_serie"].strip()
         marca = request.form["marca"].strip()
         doctor_responsable = request.form["doctor_responsable"].strip()
+        datos_profesor = PROFESORES.get(doctor_responsable)
+
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
         nombre_material = request.form["nombre_material"].strip()
         anio = request.form["anio"].strip()
         ubicacion = request.form["ubicacion"].strip()
@@ -130,6 +135,8 @@ def crear_material():
                 marca=marca,
                 foto=foto_path,
                 doctor_responsable=doctor_responsable,
+                puesto_responsable=puesto_responsable,
+                area_responsable=area_responsable,
                 nombre_material=nombre_material,
                 anio=int(anio),
                 ubicacion=ubicacion,
@@ -147,7 +154,8 @@ def crear_material():
             error=error,
             estados_validos=estados_validos,
             datos=request.form,
-            current_year=current_year
+            current_year=current_year,
+            profesores=PROFESORES
             
         )
 
@@ -156,7 +164,8 @@ def crear_material():
         error=error,
         estados_validos=estados_validos,
         datos={},
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
+        profesores=PROFESORES
     )
 
 # BUSCAR MATERIAL
@@ -225,6 +234,11 @@ def editar_material(id):
         numero_serie = request.form["numero_serie"].strip()
         marca = request.form["marca"].strip()
         doctor_responsable = request.form["doctor_responsable"].strip()
+        datos_profesor = PROFESORES.get(doctor_responsable)
+
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
         nombre_material = request.form["nombre_material"].strip()
         anio = request.form["anio"].strip()
         ubicacion = request.form["ubicacion"].strip()
@@ -250,6 +264,8 @@ def editar_material(id):
                 material.numero_serie = numero_serie
                 material.marca = marca
                 material.doctor_responsable = doctor_responsable
+                material.puesto_responsable = puesto_responsable
+                material.area_responsable = area_responsable
                 material.nombre_material = nombre_material
                 material.anio = int(anio)
                 material.ubicacion = ubicacion
@@ -277,7 +293,8 @@ def editar_material(id):
             error=error,
             estados_validos=estados_validos,
             datos=request.form,
-            current_year = datetime.now().year
+            current_year = datetime.now().year,
+            profesores=PROFESORES
         )
 
     return render_template(
@@ -286,7 +303,8 @@ def editar_material(id):
         error=error,
         estados_validos=estados_validos,
         datos={},
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
+        profesores=PROFESORES
     )
 
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
