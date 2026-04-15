@@ -39,11 +39,32 @@ class Material(db.Model):
     marca = db.Column(db.String(100), nullable=False)
     foto = db.Column(db.String(255), nullable=True)
     doctor_responsable = db.Column(db.String(150), nullable=False)
+    puesto_responsable = db.Column(db.String(100), nullable=False)
+    area_responsable = db.Column(db.String(150), nullable=False)
     nombre_material = db.Column(db.String(150), nullable=False)
     anio = db.Column(db.Integer, nullable=False)
     ubicacion = db.Column(db.String(150), nullable=False)
     estado_prestamo = db.Column(db.String(50), nullable=False)
     pdf_especificaciones = db.Column(db.String(255), nullable=True)
+
+PROFESORES = {
+    "Dr. Castillo Mixcoatl Juan": {
+        "puesto": "Profesor Investigador",
+        "area": "Optoelectrónica y fotónica"
+    },
+    "Dr. Muñoz Aguirre Severino": {
+        "puesto": "Profesor Investigador",
+        "area": "Optoelectrónica y fotónica"
+    },
+    "Dra. Beltrán Pérez Georgina": {
+        "puesto": "Profesora Investigadora",
+        "area": "Optoelectrónica y fotónica"
+    },
+    "Mtro. Pinto Rafael María Inés Teresa": {
+        "puesto": "Técnica Académica",
+        "area": "Optoelectrónica y fotónica"
+    }
+}
 
 # MENÚ PRINCIPAL
 @app.route("/")

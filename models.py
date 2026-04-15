@@ -9,6 +9,8 @@ class Material(db.Model):
     marca = db.Column(db.String(100), nullable=False)
     foto = db.Column(db.String(255), nullable=True)
     doctor_responsable = db.Column(db.String(150), nullable=False)
+    puesto_responsable = db.Column(db.String(100), nullable=False)
+    area_responsable = db.Column(db.String(150), nullable=False)
     nombre_material = db.Column(db.String(150), nullable=False)
     anio = db.Column(db.Integer, nullable=False)
     ubicacion = db.Column(db.String(150), nullable=False)
