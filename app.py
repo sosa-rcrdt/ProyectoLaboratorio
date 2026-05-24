@@ -1,51 +1,22 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
+import os
+
+from config import Config
+from models import db, Material
+
 
 app = Flask(__name__)
-app.secret_key = "clave_secreta_laboratorio"
+app.config.from_object(Config)
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-FOTOS_FOLDER = os.path.join(basedir, 'static', 'uploads', 'fotos')
-PDFS_FOLDER = os.path.join(basedir, 'static', 'uploads', 'pdfs')
-app.config['FOTOS_FOLDER'] = FOTOS_FOLDER
-app.config['PDFS_FOLDER'] = PDFS_FOLDER
-os.makedirs(FOTOS_FOLDER, exist_ok=True)
-os.makedirs(PDFS_FOLDER, exist_ok=True)
-
-def eliminar_archivo_local(ruta_relativa):
-    if not ruta_relativa:
-        return
-    if not str(ruta_relativa).startswith('http'):
-        path_absoluta = os.path.join(basedir, 'static', ruta_relativa)
-        if os.path.exists(path_absoluta):
-            try:
-                os.remove(path_absoluta)
-            except Exception as e:
-                print(f"Error al eliminar {path_absoluta}: {e}")
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "database.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-db = SQLAlchemy(app)
+db.init_app(app)
 
 
-class Material(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    numero_serie = db.Column(db.String(100), unique=True, nullable=False)
-    marca = db.Column(db.String(100), nullable=False)
-    foto = db.Column(db.String(255), nullable=True)
-    doctor_responsable = db.Column(db.String(150), nullable=False)
-    puesto_responsable = db.Column(db.String(100), nullable=False)
-    area_responsable = db.Column(db.String(150), nullable=False)
-    nombre_material = db.Column(db.String(150), nullable=False)
-    anio = db.Column(db.Integer, nullable=False)
-    ubicacion = db.Column(db.String(150), nullable=False)
-    estado_prestamo = db.Column(db.String(50), nullable=False)
-    pdf_especificaciones = db.Column(db.String(255), nullable=True)
+# Crear carpetas de uploads si no existen
+os.makedirs(app.config["UPLOAD_FOLDER_FOTOS"], exist_ok=True)
+os.makedirs(app.config["UPLOAD_FOLDER_PDFS"], exist_ok=True)
+
 
 PROFESORES = {
     "Dr. Castillo Mixcoatl Juan": {
@@ -66,21 +37,41 @@ PROFESORES = {
     }
 }
 
+
+def eliminar_archivo_local(ruta_relativa):
+    if not ruta_relativa:
+        return
+
+    if str(ruta_relativa).startswith("http"):
+        return
+
+    path_absoluta = os.path.join(app.static_folder, ruta_relativa)
+
+    if os.path.exists(path_absoluta):
+        try:
+            os.remove(path_absoluta)
+        except Exception as e:
+            print(f"Error al eliminar {path_absoluta}: {e}")
+
+
 # MENÚ PRINCIPAL
 @app.route("/")
 def menu():
     return render_template("menu.html")
+
 
 # LISTAR TODOS LOS MATERIALES
 @app.route("/materiales")
 def listar_materiales():
     materiales = Material.query.all()
     total_materiales = Material.query.count()
+
     return render_template(
         "materiales/lista.html",
         materiales=materiales,
         total_materiales=total_materiales
     )
+
 
 # CREAR MATERIAL
 @app.route("/materiales/crear", methods=["GET", "POST"])
@@ -90,46 +81,46 @@ def crear_material():
     error = None
 
     if request.method == "POST":
-        numero_serie = request.form["numero_serie"].strip()
-        marca = request.form["marca"].strip()
-        doctor_responsable = request.form["doctor_responsable"].strip()
-        datos_profesor = PROFESORES.get(doctor_responsable)
+        numero_serie = request.form.get("numero_serie", "").strip()
+        marca = request.form.get("marca", "").strip()
+        doctor_responsable = request.form.get("doctor_responsable", "").strip()
 
+        datos_profesor = PROFESORES.get(doctor_responsable)
         puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
         area_responsable = datos_profesor["area"] if datos_profesor else ""
 
-        nombre_material = request.form["nombre_material"].strip()
-        anio = request.form["anio"].strip()
-        ubicacion = request.form["ubicacion"].strip()
-        estado_prestamo = request.form["estado_prestamo"].strip()
+        nombre_material = request.form.get("nombre_material", "").strip()
+        anio = request.form.get("anio", "").strip()
+        ubicacion = request.form.get("ubicacion", "").strip()
+        estado_prestamo = request.form.get("estado_prestamo", "").strip()
 
-        # Handle Files
         foto_file = request.files.get("foto")
         pdf_file = request.files.get("pdf_especificaciones")
+
         foto_path = None
         pdf_path = None
-
-        if foto_file and foto_file.filename:
-            filename = secure_filename(foto_file.filename)
-            foto_file.save(os.path.join(app.config['FOTOS_FOLDER'], filename))
-            foto_path = f"uploads/fotos/{filename}"
-
-        if pdf_file and pdf_file.filename:
-            filename = secure_filename(pdf_file.filename)
-            pdf_file.save(os.path.join(app.config['PDFS_FOLDER'], filename))
-            pdf_path = f"uploads/pdfs/{filename}"
 
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
-        elif int(anio) > datetime.now().year:
+        elif int(anio) > current_year:
             error = "El año no puede ser mayor al actual."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
         elif Material.query.filter_by(numero_serie=numero_serie).first():
             error = "Ya existe un material con ese número de serie."
         else:
+            if foto_file and foto_file.filename:
+                filename = secure_filename(foto_file.filename)
+                foto_file.save(os.path.join(app.config["UPLOAD_FOLDER_FOTOS"], filename))
+                foto_path = f"uploads/fotos/{filename}"
+
+            if pdf_file and pdf_file.filename:
+                filename = secure_filename(pdf_file.filename)
+                pdf_file.save(os.path.join(app.config["UPLOAD_FOLDER_PDFS"], filename))
+                pdf_path = f"uploads/pdfs/{filename}"
+
             nuevo_material = Material(
                 numero_serie=numero_serie,
                 marca=marca,
@@ -146,6 +137,7 @@ def crear_material():
 
             db.session.add(nuevo_material)
             db.session.commit()
+
             flash("Material registrado correctamente.", "success")
             return redirect(url_for("listar_materiales"))
 
@@ -156,7 +148,6 @@ def crear_material():
             datos=request.form,
             current_year=current_year,
             profesores=PROFESORES
-            
         )
 
     return render_template(
@@ -164,9 +155,10 @@ def crear_material():
         error=error,
         estados_validos=estados_validos,
         datos={},
-        current_year=datetime.now().year,
+        current_year=current_year,
         profesores=PROFESORES
     )
+
 
 # BUSCAR MATERIAL
 @app.route("/materiales/buscar", methods=["GET", "POST"])
@@ -176,10 +168,10 @@ def buscar_material():
     error = None
 
     if request.method == "POST":
-        busqueda = request.form["busqueda"].strip()
+        busqueda = request.form.get("busqueda", "").strip()
 
         if not busqueda:
-            error = "Debes escribir algo para buscar"
+            error = "Debes escribir algo para buscar."
         else:
             resultados = Material.query.filter(
                 (Material.numero_serie.ilike(f"%{busqueda}%")) |
@@ -193,6 +185,7 @@ def buscar_material():
         error=error
     )
 
+
 # VER MATERIALES POR PROFESOR
 @app.route("/materiales/profesor", methods=["GET", "POST"])
 def materiales_por_profesor():
@@ -204,7 +197,7 @@ def materiales_por_profesor():
     profesores = [p[0] for p in profesores if p[0]]
 
     if request.method == "POST":
-        profesor_buscado = request.form["doctor_responsable"].strip()
+        profesor_buscado = request.form.get("doctor_responsable", "").strip()
 
         if not profesor_buscado:
             error = "Debes seleccionar o escribir un profesor."
@@ -221,7 +214,8 @@ def materiales_por_profesor():
         error=error
     )
 
-#EDITAR MATERIAL
+
+# EDITAR MATERIAL
 @app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
 def editar_material(id):
     current_year = datetime.now().year
@@ -231,18 +225,18 @@ def editar_material(id):
     error = None
 
     if request.method == "POST":
-        numero_serie = request.form["numero_serie"].strip()
-        marca = request.form["marca"].strip()
-        doctor_responsable = request.form["doctor_responsable"].strip()
-        datos_profesor = PROFESORES.get(doctor_responsable)
+        numero_serie = request.form.get("numero_serie", "").strip()
+        marca = request.form.get("marca", "").strip()
+        doctor_responsable = request.form.get("doctor_responsable", "").strip()
 
+        datos_profesor = PROFESORES.get(doctor_responsable)
         puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
         area_responsable = datos_profesor["area"] if datos_profesor else ""
 
-        nombre_material = request.form["nombre_material"].strip()
-        anio = request.form["anio"].strip()
-        ubicacion = request.form["ubicacion"].strip()
-        estado_prestamo = request.form["estado_prestamo"].strip()
+        nombre_material = request.form.get("nombre_material", "").strip()
+        anio = request.form.get("anio", "").strip()
+        ubicacion = request.form.get("ubicacion", "").strip()
+        estado_prestamo = request.form.get("estado_prestamo", "").strip()
 
         foto_file = request.files.get("foto")
         pdf_file = request.files.get("pdf_especificaciones")
@@ -251,7 +245,7 @@ def editar_material(id):
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
             error = "El año debe ser un número entero."
-        elif int(anio) > datetime.now().year:
+        elif int(anio) > current_year:
             error = "El año no puede ser mayor al actual."
         elif estado_prestamo not in estados_validos:
             error = "El estado seleccionado no es válido."
@@ -273,17 +267,20 @@ def editar_material(id):
 
                 if foto_file and foto_file.filename:
                     eliminar_archivo_local(material.foto)
+
                     filename = secure_filename(foto_file.filename)
-                    foto_file.save(os.path.join(app.config['FOTOS_FOLDER'], filename))
+                    foto_file.save(os.path.join(app.config["UPLOAD_FOLDER_FOTOS"], filename))
                     material.foto = f"uploads/fotos/{filename}"
 
                 if pdf_file and pdf_file.filename:
                     eliminar_archivo_local(material.pdf_especificaciones)
+
                     filename = secure_filename(pdf_file.filename)
-                    pdf_file.save(os.path.join(app.config['PDFS_FOLDER'], filename))
+                    pdf_file.save(os.path.join(app.config["UPLOAD_FOLDER_PDFS"], filename))
                     material.pdf_especificaciones = f"uploads/pdfs/{filename}"
 
                 db.session.commit()
+
                 flash("Material actualizado correctamente.", "success")
                 return redirect(url_for("listar_materiales"))
 
@@ -293,7 +290,7 @@ def editar_material(id):
             error=error,
             estados_validos=estados_validos,
             datos=request.form,
-            current_year = datetime.now().year,
+            current_year=current_year,
             profesores=PROFESORES
         )
 
@@ -303,19 +300,25 @@ def editar_material(id):
         error=error,
         estados_validos=estados_validos,
         datos={},
-        current_year=datetime.now().year,
+        current_year=current_year,
         profesores=PROFESORES
     )
 
+
+# ELIMINAR MATERIAL
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
 def eliminar_material(id):
-        material = Material.query.get_or_404(id)
-        eliminar_archivo_local(material.foto)
-        eliminar_archivo_local(material.pdf_especificaciones)
-        db.session.delete(material)
-        db.session.commit()
-        flash("Material eliminado correctamente.", "success")
-        return redirect(url_for("listar_materiales"))
+    material = Material.query.get_or_404(id)
+
+    eliminar_archivo_local(material.foto)
+    eliminar_archivo_local(material.pdf_especificaciones)
+
+    db.session.delete(material)
+    db.session.commit()
+
+    flash("Material eliminado correctamente.", "success")
+    return redirect(url_for("listar_materiales"))
+
 
 with app.app_context():
     db.create_all()
