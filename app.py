@@ -40,10 +40,6 @@ PROFESORES = {
 
 
 def archivos_con_nombre(lista_archivos):
-    """
-    Filtra los archivos realmente seleccionados por el usuario.
-    Cuando no se selecciona nada, Flask puede recibir un objeto vacío.
-    """
     return [archivo for archivo in lista_archivos if archivo and archivo.filename]
 
 
@@ -56,12 +52,6 @@ def extension_permitida(nombre_archivo, extensiones_permitidas):
 
 
 def validar_archivos(fotos, pdfs, fotos_actuales=0, pdfs_actuales=0):
-    """
-    Valida cantidad máxima y extensión de archivos.
-    El límite aplica por material:
-    - máximo 5 fotos
-    - máximo 5 PDFs
-    """
     max_archivos = app.config["MAX_ARCHIVOS_POR_TIPO"]
 
     if fotos_actuales + len(fotos) > max_archivos:
@@ -84,14 +74,6 @@ def validar_archivos(fotos, pdfs, fotos_actuales=0, pdfs_actuales=0):
 
 
 def guardar_archivo(archivo, carpeta_config, ruta_relativa):
-    """
-    Guarda un archivo con nombre único y regresa la ruta relativa
-    que se almacenará en la base de datos.
-
-    Ejemplos de retorno:
-    uploads/fotos/9f2a1c_material.png
-    uploads/pdfs/7b3d8e_manual.pdf
-    """
     if not archivo or not archivo.filename:
         return None
 
@@ -122,6 +104,52 @@ def eliminar_archivo_local(ruta_relativa):
             os.remove(path_absoluta)
         except Exception as e:
             print(f"Error al eliminar {path_absoluta}: {e}")
+
+
+def obtener_datos_material_formulario():
+    inventariado = request.form.get("inventariado", "No Inventariado").strip()
+    no_inventario = request.form.get("no_inventario", "").strip()
+
+    if inventariado == "No Inventariado":
+        no_inventario = ""
+
+    return {
+        "nombre_material": request.form.get("nombre_material", "").strip(),
+        "descripcion": request.form.get("descripcion", "").strip(),
+        "marca": request.form.get("marca", "").strip(),
+        "numero_serie": request.form.get("numero_serie", "").strip(),
+        "no_fabricante": request.form.get("no_fabricante", "").strip(),
+        "inventariado": inventariado,
+        "no_inventario": no_inventario,
+        "software": request.form.get("software", "").strip(),
+        "doctor_responsable": request.form.get("doctor_responsable", "").strip(),
+        "anio": request.form.get("anio", "").strip(),
+        "ubicacion": request.form.get("ubicacion", "").strip(),
+        "estado_prestamo": request.form.get("estado_prestamo", "").strip(),
+    }
+
+
+def validar_material(datos, estados_validos, inventariado_validos, current_year):
+    if not datos["nombre_material"]:
+        return "El nombre del material es obligatorio."
+
+    if datos["inventariado"] not in inventariado_validos:
+        return "Debes seleccionar si el material está inventariado o no."
+
+    if datos["inventariado"] == "Inventariado" and not datos["no_inventario"]:
+        return "El número de inventario es obligatorio cuando el material está inventariado."
+
+    if datos["anio"]:
+        if not datos["anio"].isdigit():
+            return "El año debe ser un número entero."
+
+        if int(datos["anio"]) > current_year:
+            return "El año no puede ser mayor al actual."
+
+    if datos["estado_prestamo"] not in estados_validos:
+        return "El estado seleccionado no es válido."
+
+    return None
 
 
 def guardar_fotos_de_material(material, fotos):
@@ -180,37 +208,23 @@ def listar_materiales():
 def crear_material():
     current_year = datetime.now().year
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
+    inventariado_validos = ["Inventariado", "No Inventariado"]
     error = None
 
     if request.method == "POST":
-        numero_serie = request.form.get("numero_serie", "").strip()
-        marca = request.form.get("marca", "").strip()
-        doctor_responsable = request.form.get("doctor_responsable", "").strip()
-
-        datos_profesor = PROFESORES.get(doctor_responsable)
-        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
-        area_responsable = datos_profesor["area"] if datos_profesor else ""
-
-        nombre_material = request.form.get("nombre_material", "").strip()
-        anio = request.form.get("anio", "").strip()
-        ubicacion = request.form.get("ubicacion", "").strip()
-        estado_prestamo = request.form.get("estado_prestamo", "").strip()
+        datos = obtener_datos_material_formulario()
 
         fotos = archivos_con_nombre(request.files.getlist("fotos"))
         pdfs = archivos_con_nombre(request.files.getlist("pdfs"))
 
-        # Primero validar todo el formulario
-        if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
-            error = "Todos los campos obligatorios deben estar llenos."
-        elif not anio.isdigit():
-            error = "El año debe ser un número entero."
-        elif int(anio) > current_year:
-            error = "El año no puede ser mayor al actual."
-        elif estado_prestamo not in estados_validos:
-            error = "El estado seleccionado no es válido."
-        elif Material.query.filter_by(numero_serie=numero_serie).first():
-            error = "Ya existe un material con ese número de serie."
-        else:
+        error = validar_material(
+            datos,
+            estados_validos,
+            inventariado_validos,
+            current_year
+        )
+
+        if not error:
             error = validar_archivos(fotos, pdfs)
 
         if error:
@@ -218,29 +232,37 @@ def crear_material():
                 "materiales/crear.html",
                 error=error,
                 estados_validos=estados_validos,
-                datos=request.form,
+                inventariado_validos=inventariado_validos,
+                datos=datos,
                 current_year=current_year,
                 profesores=PROFESORES,
                 max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
             )
 
-        # Si todo es válido, primero se guarda el material
+        datos_profesor = PROFESORES.get(datos["doctor_responsable"])
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
         nuevo_material = Material(
-            numero_serie=numero_serie,
-            marca=marca,
-            doctor_responsable=doctor_responsable,
+            numero_serie=datos["numero_serie"],
+            no_fabricante=datos["no_fabricante"],
+            nombre_material=datos["nombre_material"],
+            marca=datos["marca"],
+            anio=int(datos["anio"]) if datos["anio"] else None,
+            descripcion=datos["descripcion"],
+            software=datos["software"],
+            inventariado=datos["inventariado"],
+            no_inventario=datos["no_inventario"],
+            doctor_responsable=datos["doctor_responsable"],
             puesto_responsable=puesto_responsable,
             area_responsable=area_responsable,
-            nombre_material=nombre_material,
-            anio=int(anio),
-            ubicacion=ubicacion,
-            estado_prestamo=estado_prestamo
+            ubicacion=datos["ubicacion"],
+            estado_prestamo=datos["estado_prestamo"]
         )
 
         db.session.add(nuevo_material)
         db.session.flush()
 
-        # Después se guardan los archivos asociados al material
         guardar_fotos_de_material(nuevo_material, fotos)
         guardar_pdfs_de_material(nuevo_material, pdfs)
 
@@ -253,6 +275,7 @@ def crear_material():
         "materiales/crear.html",
         error=error,
         estados_validos=estados_validos,
+        inventariado_validos=inventariado_validos,
         datos={},
         current_year=current_year,
         profesores=PROFESORES,
@@ -273,9 +296,24 @@ def buscar_material():
         if not busqueda:
             error = "Debes escribir algo para buscar."
         else:
+            filtros = [
+                Material.nombre_material.ilike(f"%{busqueda}%"),
+                Material.marca.ilike(f"%{busqueda}%"),
+                Material.numero_serie.ilike(f"%{busqueda}%"),
+                Material.no_fabricante.ilike(f"%{busqueda}%"),
+                Material.no_inventario.ilike(f"%{busqueda}%")
+            ]
+
+            if busqueda.isdigit():
+                filtros.append(Material.anio == int(busqueda))
+
             resultados = Material.query.filter(
-                (Material.numero_serie.ilike(f"%{busqueda}%")) |
-                (Material.nombre_material.ilike(f"%{busqueda}%"))
+                filtros[0] |
+                filtros[1] |
+                filtros[2] |
+                filtros[3] |
+                filtros[4] |
+                (filtros[5] if len(filtros) > 5 else False)
             ).all()
 
     return render_template(
@@ -293,24 +331,23 @@ def materiales_por_profesor():
     profesor_buscado = ""
     error = None
 
-    profesores = db.session.query(Material.doctor_responsable).distinct().all()
-    profesores = [p[0] for p in profesores if p[0]]
-
     if request.method == "POST":
         profesor_buscado = request.form.get("doctor_responsable", "").strip()
 
         if not profesor_buscado:
-            error = "Debes seleccionar o escribir un profesor."
+            error = "Debes seleccionar un profesor."
+        elif profesor_buscado not in PROFESORES:
+            error = "El profesor seleccionado no es válido."
         else:
-            resultados = Material.query.filter(
-                Material.doctor_responsable.ilike(f"%{profesor_buscado}%")
+            resultados = Material.query.filter_by(
+                doctor_responsable=profesor_buscado
             ).all()
 
     return render_template(
         "materiales/profesor.html",
         resultados=resultados,
         profesor_buscado=profesor_buscado,
-        profesores=profesores,
+        profesores=PROFESORES,
         error=error
     )
 
@@ -322,46 +359,29 @@ def editar_material(id):
     material = Material.query.get_or_404(id)
 
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
+    inventariado_validos = ["Inventariado", "No Inventariado"]
     error = None
 
     if request.method == "POST":
-        numero_serie = request.form.get("numero_serie", "").strip()
-        marca = request.form.get("marca", "").strip()
-        doctor_responsable = request.form.get("doctor_responsable", "").strip()
-
-        datos_profesor = PROFESORES.get(doctor_responsable)
-        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
-        area_responsable = datos_profesor["area"] if datos_profesor else ""
-
-        nombre_material = request.form.get("nombre_material", "").strip()
-        anio = request.form.get("anio", "").strip()
-        ubicacion = request.form.get("ubicacion", "").strip()
-        estado_prestamo = request.form.get("estado_prestamo", "").strip()
+        datos = obtener_datos_material_formulario()
 
         fotos = archivos_con_nombre(request.files.getlist("fotos"))
         pdfs = archivos_con_nombre(request.files.getlist("pdfs"))
 
-        # Primero validar todo el formulario
-        if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
-            error = "Todos los campos obligatorios deben estar llenos."
-        elif not anio.isdigit():
-            error = "El año debe ser un número entero."
-        elif int(anio) > current_year:
-            error = "El año no puede ser mayor al actual."
-        elif estado_prestamo not in estados_validos:
-            error = "El estado seleccionado no es válido."
-        else:
-            material_con_mismo_numero = Material.query.filter_by(numero_serie=numero_serie).first()
+        error = validar_material(
+            datos,
+            estados_validos,
+            inventariado_validos,
+            current_year
+        )
 
-            if material_con_mismo_numero and material_con_mismo_numero.id != material.id:
-                error = "Ya existe otro material con ese número de serie."
-            else:
-                error = validar_archivos(
-                    fotos,
-                    pdfs,
-                    fotos_actuales=len(material.fotos),
-                    pdfs_actuales=len(material.pdfs)
-                )
+        if not error:
+            error = validar_archivos(
+                fotos,
+                pdfs,
+                fotos_actuales=len(material.fotos),
+                pdfs_actuales=len(material.pdfs)
+            )
 
         if error:
             return render_template(
@@ -369,24 +389,32 @@ def editar_material(id):
                 material=material,
                 error=error,
                 estados_validos=estados_validos,
-                datos=request.form,
+                inventariado_validos=inventariado_validos,
+                datos=datos,
                 current_year=current_year,
                 profesores=PROFESORES,
                 max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
             )
 
-        # Primero actualizar datos normales
-        material.numero_serie = numero_serie
-        material.marca = marca
-        material.doctor_responsable = doctor_responsable
+        datos_profesor = PROFESORES.get(datos["doctor_responsable"])
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
+        material.numero_serie = datos["numero_serie"]
+        material.no_fabricante = datos["no_fabricante"]
+        material.nombre_material = datos["nombre_material"]
+        material.marca = datos["marca"]
+        material.anio = int(datos["anio"]) if datos["anio"] else None
+        material.descripcion = datos["descripcion"]
+        material.software = datos["software"]
+        material.inventariado = datos["inventariado"]
+        material.no_inventario = datos["no_inventario"]
+        material.doctor_responsable = datos["doctor_responsable"]
         material.puesto_responsable = puesto_responsable
         material.area_responsable = area_responsable
-        material.nombre_material = nombre_material
-        material.anio = int(anio)
-        material.ubicacion = ubicacion
-        material.estado_prestamo = estado_prestamo
+        material.ubicacion = datos["ubicacion"]
+        material.estado_prestamo = datos["estado_prestamo"]
 
-        # Después agregar nuevos archivos, sin borrar los anteriores
         guardar_fotos_de_material(material, fotos)
         guardar_pdfs_de_material(material, pdfs)
 
@@ -400,6 +428,7 @@ def editar_material(id):
         material=material,
         error=error,
         estados_validos=estados_validos,
+        inventariado_validos=inventariado_validos,
         datos={},
         current_year=current_year,
         profesores=PROFESORES,

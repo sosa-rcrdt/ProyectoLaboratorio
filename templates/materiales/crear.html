@@ -4,9 +4,9 @@
 
 {% block content %}
 <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
-<div style="flex: 1; min-width: 300px; max-width: 800px;">
+<div style="flex: 1; min-width: 300px; max-width: 900px;">
     <h1 class="page-title">Registrar Nuevo Material</h1>
-    <p class="page-subtitle">Introduce las especificaciones técnicas para el nuevo componente físico o electrónico.</p>
+    <p class="page-subtitle">Introduce la información general, técnica y documental del material.</p>
 
     {% if error %}
         <div class="mensaje-flash error" id="errorBackendCrear">
@@ -20,7 +20,7 @@
             <div id="erroresCrear" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
 
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">settings_input_component</i> Identidad del Componente
+                <i class="material-symbols-rounded">settings_input_component</i> Identidad del Material
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -30,35 +30,70 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="numero_serie" class="form-label">Número de Serie</label>
-                    <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', '') }}" placeholder="SN-XXXX-XXXX" required>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                <div class="form-group">
                     <label for="marca" class="form-label">Marca / Fabricante</label>
-                    <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', '') }}" placeholder="Ej. STMicroelectronics" required>
+                    <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', '') }}" placeholder="Ej. Fluke">
                 </div>
 
                 <div class="form-group">
-                    <label for="anio" class="form-label">Año</label>
-                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', '') }}" placeholder="Ej. 2024" max="{{ current_year }}" required>
+                    <label for="numero_serie" class="form-label">Número de Serie</label>
+                    <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', '') }}" placeholder="SN-XXXX-XXXX">
+                </div>
+
+                <div class="form-group">
+                    <label for="no_fabricante" class="form-label">No. Fabricante</label>
+                    <input type="text" class="form-control" id="no_fabricante" name="no_fabricante" value="{{ datos.get('no_fabricante', '') }}" placeholder="Código o número del fabricante">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Descripción breve del material, equipo o componente">{{ datos.get('descripcion', '') }}</textarea>
                 </div>
             </div>
 
             <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">warehouse</i> Almacenamiento y Asignación
+                <i class="material-symbols-rounded">inventory_2</i> Inventario y Control
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="inventariado" class="form-label">Inventariado</label>
+                    <select class="form-control" id="inventariado" name="inventariado" required>
+                        <option value="">Selecciona una opción</option>
+                        {% for opcion in inventariado_validos %}
+                            <option value="{{ opcion }}" {% if datos.get('inventariado', 'No Inventariado') == opcion %}selected{% endif %}>
+                                {{ opcion }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numero_inventario" class="form-label">No. Inventario</label>
+                    <input type="text" class="form-control" id="numero_inventario" name="no_inventario" value="{{ datos.get('no_inventario', '') }}" placeholder="No aplica">
+                </div>
+
+                <div class="form-group">
+                    <label for="software" class="form-label">Software</label>
+                    <input type="text" class="form-control" id="software" name="software" value="{{ datos.get('software', '') }}" placeholder="Software asociado, si aplica">
+                </div>
+
+                <div class="form-group">
+                    <label for="anio" class="form-label">Año</label>
+                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', '') }}" placeholder="Ej. 2024" max="{{ current_year }}">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">warehouse</i> Ubicación y Responsable
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="doctor_responsable" class="form-label">Profesor / Dr. Asignado</label>
-                    <select class="form-control" id="doctor_responsable" name="doctor_responsable" required>
+                    <select class="form-control" id="doctor_responsable" name="doctor_responsable">
                         <option value="">Seleccione un profesor</option>
                         {% for nombre, datos_profesor in profesores.items() %}
-                            <option value="{{ nombre }}"
-                                {% if datos.get('doctor_responsable', '') == nombre %}selected{% endif %}>
+                            <option value="{{ nombre }}" {% if datos.get('doctor_responsable', '') == nombre %}selected{% endif %}>
                                 {{ nombre }} - {{ datos_profesor.puesto }} - {{ datos_profesor.area }}
                             </option>
                         {% endfor %}
@@ -67,7 +102,7 @@
 
                 <div class="form-group">
                     <label for="ubicacion" class="form-label">Ubicación</label>
-                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', '') }}" placeholder="Ej. Estante 4, Nivel B" required>
+                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', '') }}" placeholder="Ej. Estante 4, Nivel B">
                 </div>
 
                 <div class="form-group">
@@ -75,7 +110,9 @@
                     <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
                         <option value="">Selecciona el estado</option>
                         {% for estado in estados_validos %}
-                            <option value="{{ estado }}" {% if datos.get('estado_prestamo', '') == estado %}selected{% endif %}>{{ estado }}</option>
+                            <option value="{{ estado }}" {% if datos.get('estado_prestamo', '') == estado %}selected{% endif %}>
+                                {{ estado }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -90,43 +127,23 @@
                 Puedes subir hasta {{ max_archivos }} fotos y hasta {{ max_archivos }} PDFs por material. Puedes seleccionarlos en varios pasos y quitar los que no correspondan antes de registrar.
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; align-items: start;">
                 <div class="form-group">
                     <label for="fotos" class="form-label">Subir Fotos</label>
-                    <input type="file"
-                           class="form-control"
-                           id="fotos"
-                           name="fotos"
-                           accept="image/*"
-                           multiple
-                           data-max-archivos="{{ max_archivos }}"
-                           data-actuales="0"
-                           data-preview="previewFotosNuevas"
-                           data-tipo="foto"
-                           data-etiqueta-plural="fotos">
+                    <input type="file" class="form-control" id="fotos" name="fotos" accept="image/*" multiple data-max-archivos="{{ max_archivos }}" data-actuales="0" data-preview="previewFotosNuevas" data-tipo="foto" data-etiqueta-plural="fotos">
                     <div id="previewFotosNuevas" style="margin-top: 10px;"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="pdfs" class="form-label">Subir PDFs</label>
-                    <input type="file"
-                           class="form-control"
-                           id="pdfs"
-                           name="pdfs"
-                           accept="application/pdf"
-                           multiple
-                           data-max-archivos="{{ max_archivos }}"
-                           data-actuales="0"
-                           data-preview="previewPdfsNuevos"
-                           data-tipo="pdf"
-                           data-etiqueta-plural="PDFs">
+                    <input type="file" class="form-control" id="pdfs" name="pdfs" accept="application/pdf" multiple data-max-archivos="{{ max_archivos }}" data-actuales="0" data-preview="previewPdfsNuevos" data-tipo="pdf" data-etiqueta-plural="PDFs">
                     <div id="previewPdfsNuevos" style="margin-top: 10px;"></div>
                 </div>
             </div>
 
             <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
                 <a href="{{ url_for('menu') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancelar</a>
-                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">Registrar Componente</button>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">Registrar Material</button>
             </div>
         </form>
     </div>

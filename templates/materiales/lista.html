@@ -1,49 +1,79 @@
 {% extends "base.html" %}
 
-{% block title %}Lista General{% endblock %}
+{% block title %}Listado de Materiales{% endblock %}
 
 {% block content %}
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
     <div>
-        <h1 class="page-title">Inventario General</h1>
-        <p class="page-subtitle">Rastreo de todos los componentes registrados en el laboratorio.</p>
+        <h1 class="page-title">Listado General</h1>
+        <p class="page-subtitle">Consulta general de materiales registrados en el laboratorio.</p>
     </div>
-    <div style="display: flex; gap: 12px; align-items: center;">
-        <span style="font-weight: 600; font-size: 0.875rem; color: var(--neutral); background: var(--surface); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);">
-            Total de Registros: {{ total_materiales }}
-        </span>
+
+    <div style="display:flex; gap:12px; align-items:center;">
+        <div style="background: var(--surface); padding: 12px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display:block;">Total</span>
+            <strong style="font-size: 1.25rem; color: var(--primary);">{{ total_materiales }}</strong>
+        </div>
+
         <a href="{{ url_for('crear_material') }}" class="btn btn-primary">
-            <i class="material-symbols-rounded">add</i> Añadir Material
+            <i class="material-symbols-rounded">add</i> Nuevo
         </a>
     </div>
 </div>
 
 <div class="card" style="padding: 0; overflow: hidden;">
     {% if materiales %}
-    <div class="table-wrapper" style="border:none; border-radius: 0;">
-        <table>
+    <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
+        <table style="min-width: 1650px;">
             <thead>
                 <tr>
+                    <th>Material</th>
+                    <th>Descripción</th>
+                    <th>Marca</th>
                     <th>Nº Serie</th>
-                    <th>Componente</th>
-                    <th>Dr. / Prof.</th>
+                    <th>No. Fabricante</th>
+                    <th>Inventariado</th>
+                    <th>No. Inventario</th>
+                    <th>Software</th>
+                    <th>Año</th>
+                    <th style="min-width: 180px;">Responsable</th>
                     <th>Ubicación</th>
                     <th>Estado</th>
                     <th>Archivos</th>
                     <th style="text-align: right;">Acciones</th>
                 </tr>
             </thead>
+
             <tbody>
                 {% for material in materiales %}
                 <tr>
-                    <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie }}</td>
                     <td>
-                        <div style="font-weight: 600;">{{ material.nombre_material }}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ material.marca }} • {{ material.anio }}</div>
+                        <div style="font-weight: 700; color: var(--text-main);">{{ material.nombre_material }}</div>
                     </td>
-                    <td>{{ material.doctor_responsable }}</td>
-                    <td>{{ material.ubicacion }}</td>
+
+                    <td style="max-width: 260px;">
+                        <div title="{{ material.descripcion or '' }}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ material.descripcion or '—' }}
+                        </div>
+                    </td>
+
+                    <td>{{ material.marca or '—' }}</td>
+                    <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie or '—' }}</td>
+                    <td>{{ material.no_fabricante or '—' }}</td>
+
+                    <td>
+                        <span style="font-size:0.75rem; font-weight:600; color:{% if material.inventariado == 'Inventariado' %}var(--success){% else %}var(--text-muted){% endif %};">
+                            {{ material.inventariado }}
+                        </span>
+                    </td>
+
+                    <td>{{ material.no_inventario or '—' }}</td>
+                    <td>{{ material.software or '—' }}</td>
+                    <td>{{ material.anio or '—' }}</td>
+                    <td style="min-width: 180px; white-space: normal;">{{ material.doctor_responsable or '—' }}</td>
+                    <td>{{ material.ubicacion or '—' }}</td>
+
                     <td>
                         <span class="status-badge 
                             {% if material.estado_prestamo == 'Disponible' %}disponible
@@ -53,6 +83,7 @@
                             {{ material.estado_prestamo }}
                         </span>
                     </td>
+
                     <td>
                         <div style="display: flex; gap: 8px;">
                             {% if material.fotos|length > 0 %}
@@ -90,6 +121,7 @@
                             {% endif %}
                         </div>
                     </td>
+
                     <td style="text-align: right;">
                         <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
                             Editar

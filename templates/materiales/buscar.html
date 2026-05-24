@@ -5,15 +5,15 @@
 {% block content %}
 
 <h1 class="page-title">Búsqueda Avanzada</h1>
-<p class="page-subtitle">Localiza componentes electrónicos y hardware en el inventario.</p>
+<p class="page-subtitle">Localiza materiales por nombre, marca, número de serie, número de fabricante, número de inventario o año.</p>
 
 <div class="card" style="padding: 24px; background: var(--surface);">
     <form method="POST" id="formBuscarMaterial" novalidate style="display: flex; gap: 16px; align-items: flex-end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label class="form-label" style="display:none;">Buscar por número de serie o nombre:</label>
+            <label class="form-label" style="display:none;">Buscar material:</label>
             <div style="position: relative;">
                 <i class="material-symbols-rounded" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">search</i>
-                <input type="text" class="form-control" name="busqueda" value="{{ busqueda }}" placeholder="Buscar por nombre o número de serie..." required style="padding-left:48px;">
+                <input type="text" class="form-control" name="busqueda" value="{{ busqueda }}" placeholder="Buscar por nombre, marca, serie, fabricante, inventario o año..." required style="padding-left:48px;">
             </div>
         </div>
         <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">filter_list</i> Buscar</button>
@@ -25,17 +25,26 @@
 </div>
 
 {% if busqueda %}
-    <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main);">Resultados para: "<span style="color:var(--primary);">{{ busqueda }}</span>"</h3>
+    <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main);">
+        Resultados para: "<span style="color:var(--primary);">{{ busqueda }}</span>"
+    </h3>
 
     {% if resultados %}
         <div class="card" style="padding: 0; overflow: hidden;">
-            <div class="table-wrapper" style="border:none; border-radius: 0;">
-                <table>
+            <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
+                <table style="min-width: 1550px;">
                     <thead>
                         <tr>
+                            <th>Material</th>
+                            <th>Descripción</th>
+                            <th>Marca</th>
                             <th>Nº Serie</th>
-                            <th>Componente</th>
-                            <th>Dr. / Prof.</th>
+                            <th>No. Fabricante</th>
+                            <th>Inventariado</th>
+                            <th>No. Inventario</th>
+                            <th>Software</th>
+                            <th>Año</th>
+                            <th style="min-width: 180px;">Responsable</th>
                             <th>Ubicación</th>
                             <th>Estado</th>
                             <th>Archivos</th>
@@ -45,13 +54,25 @@
                     <tbody>
                         {% for material in resultados %}
                         <tr>
-                            <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie }}</td>
                             <td>
-                                <div style="font-weight: 600;">{{ material.nombre_material }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ material.marca }} • {{ material.anio }}</div>
+                                <div style="font-weight: 700;">{{ material.nombre_material }}</div>
                             </td>
-                            <td>{{ material.doctor_responsable }}</td>
-                            <td>{{ material.ubicacion }}</td>
+
+                            <td style="max-width: 240px;">
+                                <div title="{{ material.descripcion or '' }}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ material.descripcion or '—' }}
+                                </div>
+                            </td>
+
+                            <td>{{ material.marca or '—' }}</td>
+                            <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie or '—' }}</td>
+                            <td>{{ material.no_fabricante or '—' }}</td>
+                            <td>{{ material.inventariado }}</td>
+                            <td>{{ material.no_inventario or '—' }}</td>
+                            <td>{{ material.software or '—' }}</td>
+                            <td>{{ material.anio or '—' }}</td>
+                            <td style="min-width: 180px; white-space: normal;">{{ material.doctor_responsable or '—' }}</td>
+                            <td>{{ material.ubicacion or '—' }}</td>
                             <td>
                                 <span class="status-badge 
                                     {% if material.estado_prestamo == 'Disponible' %}disponible

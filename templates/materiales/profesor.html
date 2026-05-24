@@ -7,64 +7,119 @@
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
     <div>
         <h1 class="page-title">Inventario por Profesor</h1>
-        <p class="page-subtitle">Rastrea la asignación de componentes por personal del laboratorio.</p>
+        <p class="page-subtitle">Consulta los materiales asignados a cada profesor del laboratorio.</p>
     </div>
 </div>
 
 <div class="card" style="padding: 24px;">
     <form method="POST" id="formProfesor" novalidate style="display: flex; gap: 16px; align-items: flex-end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label for="doctor_responsable" class="form-label">Buscar o seleccionar Profesor</label>
-            <div style="position: relative;">
-                <i class="material-symbols-rounded" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">person_search</i>
-                <input list="lista_profesores" class="form-control" name="doctor_responsable" id="doctor_responsable" value="{{ profesor_buscado }}" placeholder="Ingresa nombre aquí..." required style="padding-left:48px;">
-            </div>
+            <label for="doctor_responsable" class="form-label">Seleccionar Profesor</label>
 
-            <datalist id="lista_profesores">
-                {% for profesor in profesores %}
-                    <option value="{{ profesor }}">
-                {% endfor %}
-            </datalist>
+            <div style="position: relative;">
+                <i class="material-symbols-rounded"
+                   style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">
+                    person_search
+                </i>
+
+                <select class="form-control"
+                        name="doctor_responsable"
+                        id="doctor_responsable"
+                        required
+                        style="padding-left:48px;">
+                    <option value="">Seleccione un profesor</option>
+
+                    {% for nombre, datos_profesor in profesores.items() %}
+                        <option value="{{ nombre }}"
+                            {% if profesor_buscado == nombre %}selected{% endif %}>
+                            {{ nombre }} - {{ datos_profesor.puesto }} - {{ datos_profesor.area }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">filter_alt</i> Filtrar</button>
+
+        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+            <i class="material-symbols-rounded">filter_alt</i>
+            Filtrar
+        </button>
     </form>
-    <div id="erroresProfesor" style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;"></div>
+
+    <div id="erroresProfesor"
+         style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">
+    </div>
+
     {% if error %}
-        <p style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">{{ error }}</p>
+        <p style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">
+            {{ error }}
+        </p>
     {% endif %}
 </div>
 
-{% if profesor_buscado %}
+{% if profesor_buscado and not error %}
     <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main); display:flex; align-items: center; gap: 12px;">
         <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
             <i class="material-symbols-rounded">person</i>
-        </div> 
-        Resultados para: <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
+        </div>
+
+        Resultados para:
+        <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
     </h3>
 
     {% if resultados %}
         <div class="card" style="padding: 0; overflow: hidden;">
-            <div class="table-wrapper" style="border:none; border-radius: 0;">
-                <table>
+            <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
+                <table style="min-width: 1450px;">
                     <thead>
                         <tr>
+                            <th>Material</th>
+                            <th>Marca</th>
                             <th>Nº Serie</th>
-                            <th>Componente</th>
+                            <th>No. Fabricante</th>
+                            <th>Inventariado</th>
+                            <th>No. Inventario</th>
+                            <th>Software</th>
+                            <th>Año</th>
                             <th>Ubicación</th>
                             <th>Estado</th>
                             <th>Archivos</th>
                             <th style="text-align: right;">Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for material in resultados %}
                         <tr>
-                            <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">{{ material.numero_serie }}</td>
                             <td>
-                                <div style="font-weight: 600;">{{ material.nombre_material }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ material.marca }} • {{ material.anio }}</div>
+                                <div style="font-weight: 700;">{{ material.nombre_material }}</div>
+
+                                {% if material.descripcion %}
+                                    <div title="{{ material.descripcion }}"
+                                         style="font-size: 0.75rem; color: var(--text-muted); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ material.descripcion }}
+                                    </div>
+                                {% endif %}
                             </td>
-                            <td>{{ material.ubicacion }}</td>
+
+                            <td>{{ material.marca or '—' }}</td>
+
+                            <td style="font-weight: 600; color: var(--primary); font-size: 0.75rem;">
+                                {{ material.numero_serie or '—' }}
+                            </td>
+
+                            <td>{{ material.no_fabricante or '—' }}</td>
+
+                            <td>
+                                <span style="font-size:0.75rem; font-weight:600; color:{% if material.inventariado == 'Inventariado' %}var(--success){% else %}var(--text-muted){% endif %};">
+                                    {{ material.inventariado }}
+                                </span>
+                            </td>
+
+                            <td>{{ material.no_inventario or '—' }}</td>
+                            <td>{{ material.software or '—' }}</td>
+                            <td>{{ material.anio or '—' }}</td>
+                            <td>{{ material.ubicacion or '—' }}</td>
+
                             <td>
                                 <span class="status-badge 
                                     {% if material.estado_prestamo == 'Disponible' %}disponible
@@ -74,6 +129,7 @@
                                     {{ material.estado_prestamo }}
                                 </span>
                             </td>
+
                             <td>
                                 <div style="display: flex; gap: 8px;">
                                     {% if material.fotos|length > 0 %}
@@ -88,7 +144,10 @@
                                             <span>{{ material.fotos|length }}</span>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin imágenes">
+                                        <button disabled
+                                                class="btn"
+                                                style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;"
+                                                title="Sin imágenes">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image_not_supported</i>
                                         </button>
                                     {% endif %}
@@ -105,15 +164,30 @@
                                             <span>{{ material.pdfs|length }}</span>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin PDFs">
+                                        <button disabled
+                                                class="btn"
+                                                style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;"
+                                                title="Sin PDFs">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                         </button>
                                     {% endif %}
                                 </div>
                             </td>
+
                             <td style="text-align: right;">
-                                <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Editar</a>
-                                <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Eliminar</button>
+                                <a href="{{ url_for('editar_material', id=material.id) }}"
+                                   class="btn btn-secondary"
+                                   style="padding: 6px 12px; font-size: 0.75rem;">
+                                    Editar
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-danger btn-eliminar"
+                                        data-id="{{ material.id }}"
+                                        data-nombre="{{ material.nombre_material }}"
+                                        style="padding: 6px 12px; font-size: 0.75rem;">
+                                    Eliminar
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -124,15 +198,17 @@
     {% else %}
         <div style="padding: 40px; text-align: center; color: var(--text-muted); background:var(--surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg);">
             <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">group_off</i>
-            <h3>Sin inventario</h3>
-            <p>No se encontraron componentes asignados a este profesor.</p>
+            <h3>Sin inventario asignado</h3>
+            <p>No se encontraron materiales asignados a este profesor.</p>
         </div>
     {% endif %}
 {% endif %}
 
 {% if not profesor_buscado %}
 <div style="display: flex; justify-content: center; align-items: flex-end; margin-top: 5px; flex-grow: 1;">
-    <img src="{{ url_for('static', filename='css/dibujolab.png') }}" alt="Ilustración Laboratorio" style="max-width: 350px; width: 100%; height: auto; opacity: 0.35; margin-bottom: 20px;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}"
+         alt="Ilustración Laboratorio"
+         style="max-width: 350px; width: 100%; height: auto; opacity: 0.35; margin-bottom: 20px;">
 </div>
 {% endif %}
 

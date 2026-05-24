@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+    configurarCampoInventario();
+
     // ===== MODAL DE ARCHIVOS =====
     const modal = document.getElementById("archivoModal");
     const modalTitulo = document.getElementById("modalTitulo");
@@ -21,9 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const partes = ruta.split("/");
         const nombre = partes[partes.length - 1] || "Archivo";
-        const nombreSinUuid = nombre.replace(/^[a-f0-9]{32}_/, "");
 
-        return nombreSinUuid;
+        return nombre.replace(/^[a-f0-9]{32}_/, "");
     }
 
     function leerArchivosDesdeBoton(boton) {
@@ -31,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 return JSON.parse(boton.dataset.archivos);
             } catch (error) {
-                console.error("No se pudieron leer los archivos del botón:", error);
+                console.error("No se pudieron leer los archivos:", error);
                 return [];
             }
         }
@@ -57,7 +58,6 @@ document.addEventListener("DOMContentLoaded", function () {
         grid.style.display = "grid";
         grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(220px, 1fr))";
         grid.style.gap = "16px";
-        grid.style.alignItems = "start";
 
         archivos.forEach((archivo, index) => {
             const contenedor = document.createElement("div");
@@ -174,7 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const cancelarEliminar = document.getElementById("cancelarEliminar");
     const mensajeEliminar = document.getElementById("mensajeEliminar");
     const formEliminar = document.getElementById("formEliminar");
-
     const botonesEliminar = document.querySelectorAll(".btn-eliminar");
 
     botonesEliminar.forEach((boton) => {
@@ -198,13 +197,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (cerrarEliminarModal) {
-        cerrarEliminarModal.addEventListener("click", () => {
+        cerrarEliminarModal.addEventListener("click", function () {
             eliminarModal.style.display = "none";
         });
     }
 
     if (cancelarEliminar) {
-        cancelarEliminar.addEventListener("click", () => {
+        cancelarEliminar.addEventListener("click", function () {
             eliminarModal.style.display = "none";
         });
     }
@@ -281,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const busqueda = formBuscar.querySelector('input[name="busqueda"]')?.value || "";
 
             if (esVacio(busqueda)) {
-                errores.push("Debes escribir el número de serie o nombre para buscar.");
+                errores.push("Debes escribir algo para buscar.");
             }
 
             if (errores.length > 0) {
@@ -316,6 +315,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
+// ===== INVENTARIADO =====
+function configurarCampoInventario() {
+    const inventariado = document.getElementById("inventariado");
+    const numeroInventario = document.getElementById("numero_inventario");
+
+    if (!inventariado || !numeroInventario) return;
+
+    function actualizarEstado() {
+        if (inventariado.value === "Inventariado") {
+            numeroInventario.disabled = false;
+            numeroInventario.required = true;
+            numeroInventario.placeholder = "Escribe el número de inventario";
+        } else {
+            numeroInventario.value = "";
+            numeroInventario.disabled = true;
+            numeroInventario.required = false;
+            numeroInventario.placeholder = "No aplica";
+        }
+    }
+
+    inventariado.addEventListener("change", actualizarEstado);
+    actualizarEstado();
+}
+
 // ===== FUNCIONES AUXILIARES DE ARCHIVOS =====
 function inicializarSelectorArchivos(inputId) {
     const input = document.getElementById(inputId);
@@ -340,7 +363,9 @@ function inicializarSelectorArchivos(inputId) {
                 return;
             }
 
-            const yaExiste = archivosSeleccionados.some((existente) => archivosSonIguales(existente, archivo));
+            const yaExiste = archivosSeleccionados.some((existente) => {
+                return archivosSonIguales(existente, archivo);
+            });
 
             if (!yaExiste) {
                 archivosSeleccionados.push(archivo);
@@ -411,12 +436,16 @@ function renderizarArchivosSeleccionados(input, preview, archivos) {
         item.style.border = "1px solid var(--border-color)";
         item.style.borderRadius = "var(--radius-md)";
         item.style.background = "var(--surface)";
+        item.style.minWidth = "0";
+        item.style.width = "100%";
+        item.style.boxSizing = "border-box";
 
         const info = document.createElement("div");
         info.style.display = "flex";
         info.style.alignItems = "center";
         info.style.gap = "10px";
         info.style.minWidth = "0";
+        info.style.flex = "1";
 
         if (tipo === "foto") {
             const img = document.createElement("img");
@@ -438,6 +467,7 @@ function renderizarArchivosSeleccionados(input, preview, archivos) {
 
         const texto = document.createElement("div");
         texto.style.minWidth = "0";
+        texto.style.flex = "1";
 
         const nombre = document.createElement("div");
         nombre.textContent = archivo.name;
@@ -446,7 +476,7 @@ function renderizarArchivosSeleccionados(input, preview, archivos) {
         nombre.style.whiteSpace = "nowrap";
         nombre.style.overflow = "hidden";
         nombre.style.textOverflow = "ellipsis";
-        nombre.style.maxWidth = "280px";
+        nombre.style.maxWidth = "100%";
 
         const tamano = document.createElement("div");
         tamano.textContent = formatearTamanoArchivo(archivo.size);
@@ -463,6 +493,7 @@ function renderizarArchivosSeleccionados(input, preview, archivos) {
         botonQuitar.style.padding = "6px 10px";
         botonQuitar.style.fontSize = "0.72rem";
         botonQuitar.textContent = "Quitar";
+        botonQuitar.style.flexShrink = "0";
 
         botonQuitar.addEventListener("click", function () {
             archivos.splice(index, 1);
@@ -492,7 +523,7 @@ function formatearTamanoArchivo(bytes) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ===== FUNCIONES AUXILIARES DE VALIDACIÓN =====
+// ===== VALIDACIONES =====
 function limpiarErrores(contenedor) {
     if (contenedor) {
         contenedor.innerHTML = "";
@@ -508,9 +539,11 @@ function mostrarErrores(contenedor, errores) {
     }
 
     let html = "<ul>";
+
     errores.forEach((error) => {
         html += `<li>${error}</li>`;
     });
+
     html += "</ul>";
 
     contenedor.innerHTML = html;
@@ -521,27 +554,52 @@ function esVacio(valor) {
 }
 
 function validarCamposMaterial(errores) {
-    const numeroSerie = document.getElementById("numero_serie")?.value || "";
     const nombreMaterial = document.getElementById("nombre_material")?.value || "";
     const marca = document.getElementById("marca")?.value || "";
+    const inventariado = document.getElementById("inventariado")?.value || "";
+    const numeroInventario = document.getElementById("numero_inventario")?.value || "";
     const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
     const anio = document.getElementById("anio")?.value || "";
     const ubicacion = document.getElementById("ubicacion")?.value || "";
     const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
 
-    if (esVacio(numeroSerie)) errores.push("El número de serie es obligatorio.");
-    if (esVacio(nombreMaterial)) errores.push("El nombre del material es obligatorio.");
-    if (esVacio(marca)) errores.push("La marca es obligatoria.");
-    if (esVacio(doctorResponsable)) errores.push("El doctor responsable es obligatorio.");
-    if (esVacio(anio)) errores.push("El año es obligatorio.");
+    if (esVacio(nombreMaterial)) {
+        errores.push("El nombre del material es obligatorio.");
+    }
+
+    if (esVacio(marca)) {
+        errores.push("La marca es obligatoria.");
+    }
+
+    if (esVacio(inventariado)) {
+        errores.push("Debes seleccionar si el material está inventariado o no.");
+    }
+
+    if (inventariado === "Inventariado" && esVacio(numeroInventario)) {
+        errores.push("El número de inventario es obligatorio cuando el material está inventariado.");
+    }
+
+    if (esVacio(doctorResponsable)) {
+        errores.push("El profesor responsable es obligatorio.");
+    }
+
+    if (esVacio(anio)) {
+        errores.push("El año es obligatorio.");
+    }
 
     const anioActual = new Date().getFullYear();
+
     if (!esVacio(anio) && parseInt(anio) > anioActual) {
         errores.push("El año no puede ser mayor al actual.");
     }
 
-    if (esVacio(ubicacion)) errores.push("La ubicación es obligatoria.");
-    if (esVacio(estadoPrestamo)) errores.push("Debes seleccionar un estado.");
+    if (esVacio(ubicacion)) {
+        errores.push("La ubicación es obligatoria.");
+    }
+
+    if (esVacio(estadoPrestamo)) {
+        errores.push("Debes seleccionar un estado.");
+    }
 }
 
 function validarLimiteArchivos(inputId, errores, etiqueta) {

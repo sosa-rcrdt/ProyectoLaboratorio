@@ -4,13 +4,15 @@
 
 {% block content %}
 <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
-<div style="flex: 1; min-width: 300px; max-width: 800px;">
+<div style="flex: 1; min-width: 300px; max-width: 900px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
         <div>
             <h1 class="page-title">Editar Material</h1>
-            <p class="page-subtitle">Actualiza los detalles del componente en el registro general.</p>
+            <p class="page-subtitle">Actualiza la información general, técnica y documental del material.</p>
         </div>
-        <a href="{{ url_for('listar_materiales') }}" class="btn btn-secondary"><i class="material-symbols-rounded">arrow_back</i> Atrás</a>
+        <a href="{{ url_for('listar_materiales') }}" class="btn btn-secondary">
+            <i class="material-symbols-rounded">arrow_back</i> Atrás
+        </a>
     </div>
 
     {% if error %}
@@ -25,7 +27,7 @@
             <div id="erroresEditar" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
 
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">settings_input_component</i> Identidad del Componente
+                <i class="material-symbols-rounded">settings_input_component</i> Identidad del Material
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -35,35 +37,70 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="numero_serie" class="form-label">Número de Serie</label>
-                    <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', material.numero_serie) }}" required>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                <div class="form-group">
                     <label for="marca" class="form-label">Marca / Fabricante</label>
-                    <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', material.marca) }}" required>
+                    <input type="text" class="form-control" id="marca" name="marca" value="{{ datos.get('marca', material.marca or '') }}">
                 </div>
 
                 <div class="form-group">
-                    <label for="anio" class="form-label">Año</label>
-                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', material.anio) }}" max="{{ current_year }}" required>
+                    <label for="numero_serie" class="form-label">Número de Serie</label>
+                    <input type="text" class="form-control" id="numero_serie" name="numero_serie" value="{{ datos.get('numero_serie', material.numero_serie or '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="no_fabricante" class="form-label">No. Fabricante</label>
+                    <input type="text" class="form-control" id="no_fabricante" name="no_fabricante" value="{{ datos.get('no_fabricante', material.no_fabricante or '') }}">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ datos.get('descripcion', material.descripcion or '') }}</textarea>
                 </div>
             </div>
 
             <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
-                <i class="material-symbols-rounded">warehouse</i> Almacenamiento y Asignación
+                <i class="material-symbols-rounded">inventory_2</i> Inventario y Control
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="inventariado" class="form-label">Inventariado</label>
+                    <select class="form-control" id="inventariado" name="inventariado" required>
+                        <option value="">Selecciona una opción</option>
+                        {% for opcion in inventariado_validos %}
+                            <option value="{{ opcion }}" {% if datos.get('inventariado', material.inventariado) == opcion %}selected{% endif %}>
+                                {{ opcion }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numero_inventario" class="form-label">No. Inventario</label>
+                    <input type="text" class="form-control" id="numero_inventario" name="no_inventario" value="{{ datos.get('no_inventario', material.no_inventario or '') }}" placeholder="No aplica">
+                </div>
+
+                <div class="form-group">
+                    <label for="software" class="form-label">Software</label>
+                    <input type="text" class="form-control" id="software" name="software" value="{{ datos.get('software', material.software or '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="anio" class="form-label">Año</label>
+                    <input type="number" class="form-control" id="anio" name="anio" value="{{ datos.get('anio', material.anio or '') }}" max="{{ current_year }}">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">warehouse</i> Ubicación y Responsable
             </h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="doctor_responsable" class="form-label">Profesor / Dr. Asignado</label>
-                    <select class="form-control" id="doctor_responsable" name="doctor_responsable" required>
+                    <select class="form-control" id="doctor_responsable" name="doctor_responsable">
                         <option value="">Seleccione un profesor</option>
                         {% for nombre, datos_profesor in profesores.items() %}
-                            <option value="{{ nombre }}"
-                                {% if datos.get('doctor_responsable', material.doctor_responsable) == nombre %}selected{% endif %}>
+                            <option value="{{ nombre }}" {% if datos.get('doctor_responsable', material.doctor_responsable) == nombre %}selected{% endif %}>
                                 {{ nombre }} - {{ datos_profesor.puesto }} - {{ datos_profesor.area }}
                             </option>
                         {% endfor %}
@@ -72,7 +109,7 @@
 
                 <div class="form-group">
                     <label for="ubicacion" class="form-label">Ubicación</label>
-                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', material.ubicacion) }}" required>
+                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', material.ubicacion or '') }}">
                 </div>
 
                 <div class="form-group">
@@ -80,7 +117,9 @@
                     <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
                         <option value="">Selecciona el estado</option>
                         {% for estado in estados_validos %}
-                            <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>{{ estado }}</option>
+                            <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>
+                                {{ estado }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -97,7 +136,7 @@
 
             <h4 style="font-size: 0.9rem; color: var(--neutral); margin-bottom: 12px;">Agregar archivos nuevos</h4>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; align-items: start;">
                 <div class="form-group">
                     <label for="fotos" class="form-label">Agregar Fotos</label>
                     <input type="file"
@@ -206,7 +245,9 @@
 
             <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
                 <a href="{{ url_for('listar_materiales') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancelar</a>
-                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;"><i class="material-symbols-rounded">save</i> Guardar Cambios</button>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+                    <i class="material-symbols-rounded">save</i> Guardar Cambios
+                </button>
             </div>
         </form>
     </div>

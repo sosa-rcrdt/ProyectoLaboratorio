@@ -6,16 +6,24 @@ db = SQLAlchemy()
 class Material(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    numero_serie = db.Column(db.String(100), unique=True, nullable=False)
-    marca = db.Column(db.String(100), nullable=False)
-
-    doctor_responsable = db.Column(db.String(150), nullable=False)
-    puesto_responsable = db.Column(db.String(100), nullable=False)
-    area_responsable = db.Column(db.String(150), nullable=False)
+    numero_serie = db.Column(db.String(100), nullable=True)
+    no_fabricante = db.Column(db.String(100), nullable=True)
 
     nombre_material = db.Column(db.String(150), nullable=False)
-    anio = db.Column(db.Integer, nullable=False)
-    ubicacion = db.Column(db.String(150), nullable=False)
+    marca = db.Column(db.String(100), nullable=True)
+    anio = db.Column(db.Integer, nullable=True)
+
+    descripcion = db.Column(db.Text, nullable=True)
+    software = db.Column(db.String(150), nullable=True)
+
+    inventariado = db.Column(db.String(30), nullable=False, default="No Inventariado")
+    no_inventario = db.Column(db.String(100), nullable=True)
+
+    doctor_responsable = db.Column(db.String(150), nullable=True)
+    puesto_responsable = db.Column(db.String(100), nullable=True)
+    area_responsable = db.Column(db.String(150), nullable=True)
+
+    ubicacion = db.Column(db.String(150), nullable=True)
     estado_prestamo = db.Column(db.String(50), nullable=False)
 
     fotos = db.relationship(
