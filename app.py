@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from uuid import uuid4
 import os
 
 from config import Config
-from models import db, Material
+from models import db, Material, MaterialFoto, MaterialPDF
 
 
 app = Flask(__name__)
@@ -38,6 +39,75 @@ PROFESORES = {
 }
 
 
+def archivos_con_nombre(lista_archivos):
+    """
+    Filtra los archivos realmente seleccionados por el usuario.
+    Cuando no se selecciona nada, Flask puede recibir un objeto vacío.
+    """
+    return [archivo for archivo in lista_archivos if archivo and archivo.filename]
+
+
+def extension_permitida(nombre_archivo, extensiones_permitidas):
+    if "." not in nombre_archivo:
+        return False
+
+    extension = nombre_archivo.rsplit(".", 1)[1].lower()
+    return extension in extensiones_permitidas
+
+
+def validar_archivos(fotos, pdfs, fotos_actuales=0, pdfs_actuales=0):
+    """
+    Valida cantidad máxima y extensión de archivos.
+    El límite aplica por material:
+    - máximo 5 fotos
+    - máximo 5 PDFs
+    """
+    max_archivos = app.config["MAX_ARCHIVOS_POR_TIPO"]
+
+    if fotos_actuales + len(fotos) > max_archivos:
+        return f"Cada material puede tener máximo {max_archivos} fotos."
+
+    if pdfs_actuales + len(pdfs) > max_archivos:
+        return f"Cada material puede tener máximo {max_archivos} PDFs."
+
+    for foto in fotos:
+        filename = secure_filename(foto.filename)
+        if not extension_permitida(filename, app.config["EXTENSIONES_FOTOS"]):
+            return "Solo se permiten imágenes con extensión: png, jpg, jpeg, gif o webp."
+
+    for pdf in pdfs:
+        filename = secure_filename(pdf.filename)
+        if not extension_permitida(filename, app.config["EXTENSIONES_PDFS"]):
+            return "Solo se permiten archivos PDF."
+
+    return None
+
+
+def guardar_archivo(archivo, carpeta_config, ruta_relativa):
+    """
+    Guarda un archivo con nombre único y regresa la ruta relativa
+    que se almacenará en la base de datos.
+
+    Ejemplos de retorno:
+    uploads/fotos/9f2a1c_material.png
+    uploads/pdfs/7b3d8e_manual.pdf
+    """
+    if not archivo or not archivo.filename:
+        return None
+
+    filename_original = secure_filename(archivo.filename)
+
+    if not filename_original:
+        return None
+
+    nombre_unico = f"{uuid4().hex}_{filename_original}"
+
+    ruta_absoluta = os.path.join(app.config[carpeta_config], nombre_unico)
+    archivo.save(ruta_absoluta)
+
+    return f"{ruta_relativa}/{nombre_unico}"
+
+
 def eliminar_archivo_local(ruta_relativa):
     if not ruta_relativa:
         return
@@ -52,6 +122,38 @@ def eliminar_archivo_local(ruta_relativa):
             os.remove(path_absoluta)
         except Exception as e:
             print(f"Error al eliminar {path_absoluta}: {e}")
+
+
+def guardar_fotos_de_material(material, fotos):
+    for foto in fotos:
+        ruta_foto = guardar_archivo(
+            foto,
+            "UPLOAD_FOLDER_FOTOS",
+            "uploads/fotos"
+        )
+
+        if ruta_foto:
+            material_foto = MaterialFoto(
+                material_id=material.id,
+                archivo=ruta_foto
+            )
+            db.session.add(material_foto)
+
+
+def guardar_pdfs_de_material(material, pdfs):
+    for pdf in pdfs:
+        ruta_pdf = guardar_archivo(
+            pdf,
+            "UPLOAD_FOLDER_PDFS",
+            "uploads/pdfs"
+        )
+
+        if ruta_pdf:
+            material_pdf = MaterialPDF(
+                material_id=material.id,
+                archivo=ruta_pdf
+            )
+            db.session.add(material_pdf)
 
 
 # MENÚ PRINCIPAL
@@ -94,12 +196,10 @@ def crear_material():
         ubicacion = request.form.get("ubicacion", "").strip()
         estado_prestamo = request.form.get("estado_prestamo", "").strip()
 
-        foto_file = request.files.get("foto")
-        pdf_file = request.files.get("pdf_especificaciones")
+        fotos = archivos_con_nombre(request.files.getlist("fotos"))
+        pdfs = archivos_con_nombre(request.files.getlist("pdfs"))
 
-        foto_path = None
-        pdf_path = None
-
+        # Primero validar todo el formulario
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
@@ -111,44 +211,43 @@ def crear_material():
         elif Material.query.filter_by(numero_serie=numero_serie).first():
             error = "Ya existe un material con ese número de serie."
         else:
-            if foto_file and foto_file.filename:
-                filename = secure_filename(foto_file.filename)
-                foto_file.save(os.path.join(app.config["UPLOAD_FOLDER_FOTOS"], filename))
-                foto_path = f"uploads/fotos/{filename}"
+            error = validar_archivos(fotos, pdfs)
 
-            if pdf_file and pdf_file.filename:
-                filename = secure_filename(pdf_file.filename)
-                pdf_file.save(os.path.join(app.config["UPLOAD_FOLDER_PDFS"], filename))
-                pdf_path = f"uploads/pdfs/{filename}"
-
-            nuevo_material = Material(
-                numero_serie=numero_serie,
-                marca=marca,
-                foto=foto_path,
-                doctor_responsable=doctor_responsable,
-                puesto_responsable=puesto_responsable,
-                area_responsable=area_responsable,
-                nombre_material=nombre_material,
-                anio=int(anio),
-                ubicacion=ubicacion,
-                estado_prestamo=estado_prestamo,
-                pdf_especificaciones=pdf_path
+        if error:
+            return render_template(
+                "materiales/crear.html",
+                error=error,
+                estados_validos=estados_validos,
+                datos=request.form,
+                current_year=current_year,
+                profesores=PROFESORES,
+                max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
             )
 
-            db.session.add(nuevo_material)
-            db.session.commit()
-
-            flash("Material registrado correctamente.", "success")
-            return redirect(url_for("listar_materiales"))
-
-        return render_template(
-            "materiales/crear.html",
-            error=error,
-            estados_validos=estados_validos,
-            datos=request.form,
-            current_year=current_year,
-            profesores=PROFESORES
+        # Si todo es válido, primero se guarda el material
+        nuevo_material = Material(
+            numero_serie=numero_serie,
+            marca=marca,
+            doctor_responsable=doctor_responsable,
+            puesto_responsable=puesto_responsable,
+            area_responsable=area_responsable,
+            nombre_material=nombre_material,
+            anio=int(anio),
+            ubicacion=ubicacion,
+            estado_prestamo=estado_prestamo
         )
+
+        db.session.add(nuevo_material)
+        db.session.flush()
+
+        # Después se guardan los archivos asociados al material
+        guardar_fotos_de_material(nuevo_material, fotos)
+        guardar_pdfs_de_material(nuevo_material, pdfs)
+
+        db.session.commit()
+
+        flash("Material registrado correctamente.", "success")
+        return redirect(url_for("listar_materiales"))
 
     return render_template(
         "materiales/crear.html",
@@ -156,7 +255,8 @@ def crear_material():
         estados_validos=estados_validos,
         datos={},
         current_year=current_year,
-        profesores=PROFESORES
+        profesores=PROFESORES,
+        max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
     )
 
 
@@ -238,9 +338,10 @@ def editar_material(id):
         ubicacion = request.form.get("ubicacion", "").strip()
         estado_prestamo = request.form.get("estado_prestamo", "").strip()
 
-        foto_file = request.files.get("foto")
-        pdf_file = request.files.get("pdf_especificaciones")
+        fotos = archivos_con_nombre(request.files.getlist("fotos"))
+        pdfs = archivos_con_nombre(request.files.getlist("pdfs"))
 
+        # Primero validar todo el formulario
         if not numero_serie or not marca or not doctor_responsable or not nombre_material or not anio or not ubicacion or not estado_prestamo:
             error = "Todos los campos obligatorios deben estar llenos."
         elif not anio.isdigit():
@@ -255,44 +356,44 @@ def editar_material(id):
             if material_con_mismo_numero and material_con_mismo_numero.id != material.id:
                 error = "Ya existe otro material con ese número de serie."
             else:
-                material.numero_serie = numero_serie
-                material.marca = marca
-                material.doctor_responsable = doctor_responsable
-                material.puesto_responsable = puesto_responsable
-                material.area_responsable = area_responsable
-                material.nombre_material = nombre_material
-                material.anio = int(anio)
-                material.ubicacion = ubicacion
-                material.estado_prestamo = estado_prestamo
+                error = validar_archivos(
+                    fotos,
+                    pdfs,
+                    fotos_actuales=len(material.fotos),
+                    pdfs_actuales=len(material.pdfs)
+                )
 
-                if foto_file and foto_file.filename:
-                    eliminar_archivo_local(material.foto)
+        if error:
+            return render_template(
+                "materiales/editar.html",
+                material=material,
+                error=error,
+                estados_validos=estados_validos,
+                datos=request.form,
+                current_year=current_year,
+                profesores=PROFESORES,
+                max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
+            )
 
-                    filename = secure_filename(foto_file.filename)
-                    foto_file.save(os.path.join(app.config["UPLOAD_FOLDER_FOTOS"], filename))
-                    material.foto = f"uploads/fotos/{filename}"
+        # Primero actualizar datos normales
+        material.numero_serie = numero_serie
+        material.marca = marca
+        material.doctor_responsable = doctor_responsable
+        material.puesto_responsable = puesto_responsable
+        material.area_responsable = area_responsable
+        material.nombre_material = nombre_material
+        material.anio = int(anio)
+        material.ubicacion = ubicacion
+        material.estado_prestamo = estado_prestamo
 
-                if pdf_file and pdf_file.filename:
-                    eliminar_archivo_local(material.pdf_especificaciones)
+        # Después agregar nuevos archivos, sin borrar los anteriores
+        guardar_fotos_de_material(material, fotos)
+        guardar_pdfs_de_material(material, pdfs)
 
-                    filename = secure_filename(pdf_file.filename)
-                    pdf_file.save(os.path.join(app.config["UPLOAD_FOLDER_PDFS"], filename))
-                    material.pdf_especificaciones = f"uploads/pdfs/{filename}"
+        db.session.commit()
 
-                db.session.commit()
-
-                flash("Material actualizado correctamente.", "success")
-                return redirect(url_for("listar_materiales"))
-
-        return render_template(
-            "materiales/editar.html",
-            material=material,
-            error=error,
-            estados_validos=estados_validos,
-            datos=request.form,
-            current_year=current_year,
-            profesores=PROFESORES
-        )
+        flash("Material actualizado correctamente.", "success")
+        return redirect(url_for("listar_materiales"))
 
     return render_template(
         "materiales/editar.html",
@@ -301,17 +402,51 @@ def editar_material(id):
         estados_validos=estados_validos,
         datos={},
         current_year=current_year,
-        profesores=PROFESORES
+        profesores=PROFESORES,
+        max_archivos=app.config["MAX_ARCHIVOS_POR_TIPO"]
     )
 
 
-# ELIMINAR MATERIAL
+# ELIMINAR UNA FOTO ESPECÍFICA
+@app.route("/materiales/foto/eliminar/<int:foto_id>", methods=["POST"])
+def eliminar_foto_material(foto_id):
+    foto = MaterialFoto.query.get_or_404(foto_id)
+    material_id = foto.material_id
+
+    eliminar_archivo_local(foto.archivo)
+
+    db.session.delete(foto)
+    db.session.commit()
+
+    flash("Foto eliminada correctamente.", "success")
+    return redirect(url_for("editar_material", id=material_id))
+
+
+# ELIMINAR UN PDF ESPECÍFICO
+@app.route("/materiales/pdf/eliminar/<int:pdf_id>", methods=["POST"])
+def eliminar_pdf_material(pdf_id):
+    pdf = MaterialPDF.query.get_or_404(pdf_id)
+    material_id = pdf.material_id
+
+    eliminar_archivo_local(pdf.archivo)
+
+    db.session.delete(pdf)
+    db.session.commit()
+
+    flash("PDF eliminado correctamente.", "success")
+    return redirect(url_for("editar_material", id=material_id))
+
+
+# ELIMINAR MATERIAL COMPLETO
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
 def eliminar_material(id):
     material = Material.query.get_or_404(id)
 
-    eliminar_archivo_local(material.foto)
-    eliminar_archivo_local(material.pdf_especificaciones)
+    for foto in material.fotos:
+        eliminar_archivo_local(foto.archivo)
+
+    for pdf in material.pdfs:
+        eliminar_archivo_local(pdf.archivo)
 
     db.session.delete(material)
     db.session.commit()

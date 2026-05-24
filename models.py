@@ -8,7 +8,6 @@ class Material(db.Model):
 
     numero_serie = db.Column(db.String(100), unique=True, nullable=False)
     marca = db.Column(db.String(100), nullable=False)
-    foto = db.Column(db.String(255), nullable=True)
 
     doctor_responsable = db.Column(db.String(150), nullable=False)
     puesto_responsable = db.Column(db.String(100), nullable=False)
@@ -19,7 +18,37 @@ class Material(db.Model):
     ubicacion = db.Column(db.String(150), nullable=False)
     estado_prestamo = db.Column(db.String(50), nullable=False)
 
-    pdf_especificaciones = db.Column(db.String(255), nullable=True)
+    fotos = db.relationship(
+        "MaterialFoto",
+        backref="material",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
+    pdfs = db.relationship(
+        "MaterialPDF",
+        backref="material",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
 
     def __repr__(self):
         return f"<Material {self.nombre_material}>"
+
+
+class MaterialFoto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    material_id = db.Column(db.Integer, db.ForeignKey("material.id"), nullable=False)
+    archivo = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<MaterialFoto {self.archivo}>"
+
+
+class MaterialPDF(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    material_id = db.Column(db.Integer, db.ForeignKey("material.id"), nullable=False)
+    archivo = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<MaterialPDF {self.archivo}>"

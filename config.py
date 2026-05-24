@@ -11,3 +11,8 @@ class Config:
 
     UPLOAD_FOLDER_FOTOS = os.path.join(BASE_DIR, "static", "uploads", "fotos")
     UPLOAD_FOLDER_PDFS = os.path.join(BASE_DIR, "static", "uploads", "pdfs")
+
+    MAX_ARCHIVOS_POR_TIPO = 5
+
+    EXTENSIONES_FOTOS = {"png", "jpg", "jpeg", "gif", "webp"}
+    EXTENSIONES_PDFS = {"pdf"}

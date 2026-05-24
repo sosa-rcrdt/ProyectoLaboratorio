@@ -23,7 +23,7 @@
     <div class="card">
         <form method="POST" id="formEditarMaterial" enctype="multipart/form-data" novalidate>
             <div id="erroresEditar" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
-            
+
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
                 <i class="material-symbols-rounded">settings_input_component</i> Identidad del Componente
             </h3>
@@ -69,45 +69,138 @@
                         {% endfor %}
                     </select>
                 </div>
-            </div>
 
                 <div class="form-group">
                     <label for="ubicacion" class="form-label">Ubicación</label>
                     <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ datos.get('ubicacion', material.ubicacion) }}" required>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="estado_prestamo" class="form-label">Estado</label>
-                <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
-                    <option value="">Selecciona el estado</option>
-                    {% for estado in estados_validos %}
-                        <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>{{ estado }}</option>
-                    {% endfor %}
-                </select>
+                <div class="form-group">
+                    <label for="estado_prestamo" class="form-label">Estado</label>
+                    <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
+                        <option value="">Selecciona el estado</option>
+                        {% for estado in estados_validos %}
+                            <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>{{ estado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
                 <i class="material-symbols-rounded">description</i> Documentación y Archivos
             </h3>
 
-            <!-- Notice about current files -->
-            {% if material.foto or material.pdf_especificaciones %}
             <div style="background: var(--bg-color); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.875rem; color: var(--text-muted); display:flex; align-items:center; gap:8px; border: 1px dashed var(--border-color);">
                 <i class="material-symbols-rounded" style="color:var(--primary);">info</i>
-                Deja las entradas de archivo en blanco si deseas conservar los archivos actuales subidos.
+                Cada material puede tener máximo {{ max_archivos }} fotos y {{ max_archivos }} PDFs. Puedes agregar archivos nuevos en varios pasos, quitar los seleccionados antes de guardar o eliminar archivos ya registrados.
             </div>
-            {% endif %}
+
+            <h4 style="font-size: 0.9rem; color: var(--neutral); margin-bottom: 12px;">Agregar archivos nuevos</h4>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
-                    <label for="foto" class="form-label">Subir Foto (Reemplazar Imagen)</label>
-                    <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+                    <label for="fotos" class="form-label">Agregar Fotos</label>
+                    <input type="file"
+                           class="form-control"
+                           id="fotos"
+                           name="fotos"
+                           accept="image/*"
+                           multiple
+                           data-max-archivos="{{ max_archivos }}"
+                           data-actuales="{{ material.fotos|length }}"
+                           data-preview="previewFotosNuevas"
+                           data-tipo="foto"
+                           data-etiqueta-plural="fotos">
+                    <div id="previewFotosNuevas" style="margin-top: 10px;"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="pdf_especificaciones" class="form-label">Subir PDF (Reemplazar Specs)</label>
-                    <input type="file" class="form-control" id="pdf_especificaciones" name="pdf_especificaciones" accept="application/pdf">
+                    <label for="pdfs" class="form-label">Agregar PDFs</label>
+                    <input type="file"
+                           class="form-control"
+                           id="pdfs"
+                           name="pdfs"
+                           accept="application/pdf"
+                           multiple
+                           data-max-archivos="{{ max_archivos }}"
+                           data-actuales="{{ material.pdfs|length }}"
+                           data-preview="previewPdfsNuevos"
+                           data-tipo="pdf"
+                           data-etiqueta-plural="PDFs">
+                    <div id="previewPdfsNuevos" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <h4 style="font-size: 0.9rem; color: var(--neutral); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    <i class="material-symbols-rounded" style="font-size:18px; color:var(--primary);">perm_media</i>
+                    Archivos actuales
+                </h4>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <h5 style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Fotos actuales ({{ material.fotos|length }}/{{ max_archivos }})</h5>
+
+                        {% if material.fotos %}
+                            <div style="display: grid; gap: 12px;">
+                                {% for foto in material.fotos %}
+                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--surface);">
+                                        <button type="button"
+                                                class="btn btn-secondary btn-modal"
+                                                style="padding: 6px 10px; font-size: 0.75rem;"
+                                                data-tipo="fotos"
+                                                data-titulo="Foto: {{ material.nombre_material }}"
+                                                data-archivos='{{ [foto.archivo]|tojson }}'>
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
+                                            Ver
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-danger btn-eliminar"
+                                                data-url="{{ url_for('eliminar_foto_material', foto_id=foto.id) }}"
+                                                data-nombre="esta foto"
+                                                style="padding:6px 10px; font-size:0.75rem;">
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Este material no tiene fotos registradas.</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <h5 style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">PDFs actuales ({{ material.pdfs|length }}/{{ max_archivos }})</h5>
+
+                        {% if material.pdfs %}
+                            <div style="display: grid; gap: 12px;">
+                                {% for pdf in material.pdfs %}
+                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--surface);">
+                                        <button type="button"
+                                                class="btn btn-secondary btn-modal"
+                                                style="padding: 6px 10px; font-size: 0.75rem;"
+                                                data-tipo="pdfs"
+                                                data-titulo="PDF: {{ material.nombre_material }}"
+                                                data-archivos='{{ [pdf.archivo]|tojson }}'>
+                                            <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                            Ver
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-danger btn-eliminar"
+                                                data-url="{{ url_for('eliminar_pdf_material', pdf_id=pdf.id) }}"
+                                                data-nombre="este PDF"
+                                                style="padding:6px 10px; font-size:0.75rem;">
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Este material no tiene PDFs registrados.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 

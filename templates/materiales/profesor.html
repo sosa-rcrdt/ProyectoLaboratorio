@@ -19,7 +19,7 @@
                 <i class="material-symbols-rounded" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">person_search</i>
                 <input list="lista_profesores" class="form-control" name="doctor_responsable" id="doctor_responsable" value="{{ profesor_buscado }}" placeholder="Ingresa nombre aquí..." required style="padding-left:48px;">
             </div>
-            
+
             <datalist id="lista_profesores">
                 {% for profesor in profesores %}
                     <option value="{{ profesor }}">
@@ -76,22 +76,36 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
-                                    {% if material.foto %}
-                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="foto" data-titulo="Foto: {{ material.nombre_material }}" data-archivo="{{ material.foto }}" title="Ver imagen">
+                                    {% if material.fotos|length > 0 %}
+                                        <button type="button"
+                                                class="btn btn-secondary btn-modal"
+                                                style="padding: 6px 8px; font-size: 0.75rem;"
+                                                data-tipo="fotos"
+                                                data-titulo="Fotos: {{ material.nombre_material }}"
+                                                data-archivos='{{ material.fotos|map(attribute="archivo")|list|tojson }}'
+                                                title="Ver fotos">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
+                                            <span>{{ material.fotos|length }}</span>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin imagen">
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin imágenes">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image_not_supported</i>
                                         </button>
                                     {% endif %}
 
-                                    {% if material.pdf_especificaciones %}
-                                        <button type="button" class="btn btn-secondary btn-modal" style="padding: 6px; font-size: 0.75rem;" data-tipo="pdf" data-titulo="Archivo: {{ material.nombre_material }}" data-archivo="{{ material.pdf_especificaciones }}" title="PDF Especificaciones">
+                                    {% if material.pdfs|length > 0 %}
+                                        <button type="button"
+                                                class="btn btn-secondary btn-modal"
+                                                style="padding: 6px 8px; font-size: 0.75rem;"
+                                                data-tipo="pdfs"
+                                                data-titulo="PDFs: {{ material.nombre_material }}"
+                                                data-archivos='{{ material.pdfs|map(attribute="archivo")|list|tojson }}'
+                                                title="Ver PDFs">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                            <span>{{ material.pdfs|length }}</span>
                                         </button>
                                     {% else %}
-                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin PDF">
+                                        <button disabled class="btn" style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;" title="Sin PDFs">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                         </button>
                                     {% endif %}
