@@ -1,0 +1,34 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+
+# Cachés y bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cachés de herramientas y pruebas
+.pytest_cache/
+.mypy_cache/
+.cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Distribución / empaquetado
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Archivos de log e instaladores
+pip-log.txt
+pip-delete-this-directory.txt
+*.log
+
+# VSCode
+.vscode/
+
