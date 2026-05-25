@@ -1,8 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from uuid import uuid4
 import os
+
+from io import BytesIO
+from xml.sax.saxutils import escape
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, legal, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
 from config import Config
 from models import db, Material, MaterialFoto, MaterialPDF, Factura
@@ -233,6 +242,236 @@ def guardar_pdfs_de_material(material, pdfs):
                 archivo=ruta_pdf
             )
             db.session.add(material_pdf)
+
+def texto_pdf(valor):
+    if valor is None:
+        return "-"
+
+    valor = str(valor).strip()
+
+    if not valor:
+        return "-"
+
+    return valor
+
+
+def parrafo_pdf(valor, estilo):
+    return Paragraph(escape(texto_pdf(valor)), estilo)
+
+
+def agregar_pie_pagina_pdf(canvas, doc):
+    canvas.saveState()
+
+    if getattr(doc, "titulo_pdf", None):
+        canvas.setTitle(doc.titulo_pdf)
+
+    canvas.setFont("Helvetica", 7)
+    canvas.setFillColor(colors.HexColor("#64748B"))
+
+    canvas.drawString(
+        0.35 * inch,
+        0.22 * inch,
+        "Sistema de Gestion de Laboratorio"
+    )
+
+    canvas.drawRightString(
+        landscape(legal)[0] - 0.35 * inch,
+        0.22 * inch,
+        f"Pagina {doc.page}"
+    )
+
+    canvas.restoreState()
+
+
+def construir_pdf_inventario_docente(profesor, materiales):
+    buffer = BytesIO()
+
+    titulo_pdf = f"Inventario de Docente - {profesor}"
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(legal),
+        rightMargin=0.35 * inch,
+        leftMargin=0.35 * inch,
+        topMargin=0.35 * inch,
+        bottomMargin=0.45 * inch
+    )
+
+    doc.titulo_pdf = titulo_pdf
+
+    estilos = getSampleStyleSheet()
+    ancho_total = doc.width
+
+    titulo_style = ParagraphStyle(
+        "TituloInventario",
+        parent=estilos["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        leading=22,
+        alignment=1,
+        textColor=colors.HexColor("#0F172A"),
+        spaceAfter=2
+    )
+
+    subtitulo_style = ParagraphStyle(
+        "SubtituloInventario",
+        parent=estilos["Normal"],
+        fontName="Helvetica",
+        fontSize=10,
+        leading=12,
+        alignment=1,
+        textColor=colors.HexColor("#475569"),
+        spaceAfter=16
+    )
+
+    info_style = ParagraphStyle(
+        "InfoInventario",
+        parent=estilos["Normal"],
+        fontName="Helvetica",
+        fontSize=9,
+        leading=11.2,
+        textColor=colors.HexColor("#0F172A")
+    )
+
+    encabezado_style = ParagraphStyle(
+        "EncabezadoTablaInventario",
+        parent=estilos["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=9.2,
+        alignment=1,
+        textColor=colors.white
+    )
+
+    celda_style = ParagraphStyle(
+        "CeldaTablaInventario",
+        parent=estilos["Normal"],
+        fontName="Helvetica",
+        fontSize=7.8,
+        leading=9.3,
+        textColor=colors.HexColor("#0F172A")
+    )
+
+    celda_centro_style = ParagraphStyle(
+        "CeldaCentroTablaInventario",
+        parent=celda_style,
+        alignment=1
+    )
+
+    elementos = []
+
+    datos_profesor = PROFESORES.get(profesor, {})
+    fecha_generacion = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    elementos.append(Paragraph("Laboratiorio de Electrónica y Optoelectrónica", titulo_style))
+    elementos.append(Paragraph("Reporte general de materiales asignados", subtitulo_style))
+
+    info_data = [
+        [
+            Paragraph(f"<b>Profesor:</b> {escape(texto_pdf(profesor))}", info_style),
+            Paragraph(f"<b>Puesto:</b> {escape(texto_pdf(datos_profesor.get('puesto')))}", info_style),
+            Paragraph(f"<b>Area:</b> {escape(texto_pdf(datos_profesor.get('area')))}", info_style),
+        ],
+        [
+            Paragraph(f"<b>Fecha de generacion:</b> {escape(fecha_generacion)}", info_style),
+            Paragraph(f"<b>Total de materiales:</b> {escape(str(len(materiales)))}", info_style),
+            Paragraph("<b>Tipo de reporte:</b> Inventario por docente", info_style),
+        ],
+    ]
+
+    info_table = Table(
+        info_data,
+        colWidths=[
+            ancho_total / 3,
+            ancho_total / 3,
+            ancho_total / 3
+        ]
+    )
+
+    info_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+
+    elementos.append(info_table)
+    elementos.append(Spacer(1, 16))
+
+    encabezados = [
+        "Material",
+        "Descripcion",
+        "Marca",
+        "No. Serie",
+        "No. Fabricante",
+        "Inventariado",
+        "No. Inventario",
+        "Fecha",
+        "Ubicacion",
+        "Estado"
+    ]
+
+    tabla_datos = [
+        [Paragraph(escape(encabezado), encabezado_style) for encabezado in encabezados]
+    ]
+
+    for material in materiales:
+        tabla_datos.append([
+            parrafo_pdf(material.nombre_material or "Sin nombre", celda_style),
+            parrafo_pdf(material.descripcion, celda_style),
+            parrafo_pdf(material.marca, celda_style),
+            parrafo_pdf(material.numero_serie, celda_style),
+            parrafo_pdf(material.no_fabricante, celda_style),
+            parrafo_pdf(material.inventariado, celda_centro_style),
+            parrafo_pdf(material.no_inventario, celda_style),
+            parrafo_pdf(material.anio, celda_centro_style),
+            parrafo_pdf(material.ubicacion, celda_style),
+            parrafo_pdf(material.estado_prestamo, celda_centro_style),
+        ])
+
+    tabla = Table(
+        tabla_datos,
+        repeatRows=1,
+        colWidths=[
+            1.40 * inch,  # Material
+            3.05 * inch,  # Descripcion
+            1.15 * inch,  # Marca
+            1.20 * inch,  # No. Serie
+            1.30 * inch,  # No. Fabricante
+            1.15 * inch,  # Inventariado
+            1.25 * inch,  # No. Inventario
+            0.80 * inch,  # Fecha
+            1.20 * inch,  # Ubicacion
+            0.80 * inch,  # Estado
+        ]
+    )
+
+    tabla.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1A237E")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#CBD5E1")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW", (0, 0), (-1, 0), 0.45, colors.HexColor("#0F172A")),
+    ]))
+
+    elementos.append(tabla)
+
+    doc.build(
+        elementos,
+        onFirstPage=agregar_pie_pagina_pdf,
+        onLaterPages=agregar_pie_pagina_pdf
+    )
+
+    buffer.seek(0)
+
+    return buffer
+
 
 def obtener_datos_factura_formulario():
     return {
@@ -495,6 +734,42 @@ def materiales_por_profesor():
         profesor_buscado=profesor_buscado,
         profesores=PROFESORES,
         error=error
+    )
+
+
+# IMPRIMIR INVENTARIO DE DOCENTE EN PDF
+@app.route("/materiales/profesor/pdf")
+def imprimir_inventario_docente():
+    profesor = request.args.get("doctor_responsable", "").strip()
+
+    if not profesor:
+        flash("Debes seleccionar un profesor para generar el inventario.", "error")
+        return redirect(url_for("materiales_por_profesor"))
+
+    if profesor not in PROFESORES:
+        flash("El profesor seleccionado no es válido.", "error")
+        return redirect(url_for("materiales_por_profesor"))
+
+    materiales = Material.query.filter_by(
+        doctor_responsable=profesor
+    ).order_by(Material.nombre_material.asc()).all()
+
+    if not materiales:
+        flash("No hay materiales para generar el inventario de este docente.", "error")
+        return redirect(url_for("materiales_por_profesor"))
+
+    pdf_buffer = construir_pdf_inventario_docente(profesor, materiales)
+
+    nombre_archivo = secure_filename(f"inventario_{profesor}.pdf")
+
+    if not nombre_archivo:
+        nombre_archivo = "inventario_docente.pdf"
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=nombre_archivo
     )
 
 

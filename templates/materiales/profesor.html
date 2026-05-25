@@ -64,14 +64,25 @@
 </div>
 
 {% if profesor_buscado and not error %}
-    <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main); display:flex; align-items: center; gap: 12px;">
-        <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <i class="material-symbols-rounded">person</i>
-        </div>
+    <div style="margin: 32px 0 16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-main); display:flex; align-items: center; gap: 12px; margin:0;">
+            <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="material-symbols-rounded">person</i>
+            </div>
 
-        Resultados para:
-        <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
-    </h3>
+            Resultados para:
+            <span style="color:var(--primary);">"{{ profesor_buscado }}"</span>
+        </h3>
+
+        {% if resultados %}
+            <a href="{{ url_for('imprimir_inventario_docente', doctor_responsable=profesor_buscado) }}"
+               class="btn btn-primary"
+               style="padding: 10px 18px; text-decoration:none;">
+                <i class="material-symbols-rounded">picture_as_pdf</i>
+                Imprimir inventario de docente
+            </a>
+        {% endif %}
+    </div>
 
     {% if resultados %}
         <div class="card" style="padding: 0; overflow: hidden;">
@@ -82,9 +93,9 @@
                             <th>Material</th>
                             <th>Marca</th>
                             <th>Nº Serie</th>
-                            <th>No. Fabricante</th>
+                            <th>Nº Fabricante</th>
                             <th>Inventariado</th>
-                            <th>No. Inventario</th>
+                            <th>Nº Inventario</th>
                             <th>Software</th>
                             <th>Año</th>
                             <th>Ubicación</th>
