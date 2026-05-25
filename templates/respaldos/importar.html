@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Respaldo{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Importar Respaldo</h1>
+<p class="page-subtitle">Restaura un respaldo completo del sistema desde un archivo ZIP.</p>
+
+<div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 320px; max-width: 900px;">
+        <div class="card" style="padding: 24px;">
+            <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 24px; display:flex; gap:12px; align-items:flex-start;">
+                <i class="material-symbols-rounded" style="font-size: 26px;">warning</i>
+
+                <div>
+                    <h3 style="margin:0 0 8px; font-size: 1rem; font-weight: 800;">
+                        Esta acción reemplazará la información actual
+                    </h3>
+
+                    <p style="margin:0; font-size: 0.9rem; line-height: 1.5;">
+                        Al importar un respaldo se reemplazará la base de datos actual y todos los archivos cargados
+                        en <strong>fotos</strong>, <strong>PDFs de materiales</strong> y <strong>PDFs de facturas</strong>.
+                        Antes de restaurar, el sistema generará automáticamente una copia de seguridad del estado actual.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                    <i class="material-symbols-rounded">upload_file</i>
+                    Archivo de respaldo
+                </h3>
+
+                <div class="form-group">
+                    <label for="archivo_respaldo" class="form-label">Seleccionar archivo ZIP</label>
+                    <input type="file"
+                           class="form-control"
+                           id="archivo_respaldo"
+                           name="archivo_respaldo"
+                           accept=".zip,application/zip,application/x-zip-compressed">
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;">
+                        El archivo debe ser un respaldo generado por este sistema.
+                    </p>
+                </div>
+
+                <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-top: 20px;">
+                    <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; color: var(--text-main); font-size: 0.9rem; line-height: 1.45;">
+                        <input type="checkbox"
+                               name="confirmar_importacion"
+                               value="si"
+                               style="margin-top: 3px; width: 18px; height: 18px;">
+                        <span>
+                            Entiendo que al importar este respaldo se reemplazará la información actual del sistema.
+                        </span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('menu') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn btn-danger" style="padding: 12px 28px;">
+                        <i class="material-symbols-rounded">restore</i>
+                        Importar y reemplazar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div style="flex: 1; min-width: 280px; top: 40px;">
+        <div class="card" style="padding: 22px;">
+            <h3 style="font-size: 1rem; font-weight: 800; color: var(--primary); margin-bottom: 14px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">info</i>
+                ¿Qué debe contener el respaldo?
+            </h3>
+
+            <ul style="margin:0; padding-left: 20px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.8;">
+                <li><strong>database.db</strong></li>
+                <li><strong>uploads/fotos/</strong></li>
+                <li><strong>uploads/pdfs/</strong></li>
+                <li><strong>uploads/facturas/</strong></li>
+                <li><strong>metadata.json</strong> opcional</li>
+            </ul>
+
+            <div style="margin-top: 18px; padding: 14px; border-radius: var(--radius-md); background: var(--bg-color); color: var(--text-muted); font-size: 0.82rem; line-height: 1.5;">
+                Recomendación: importa únicamente respaldos generados desde este mismo sistema.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

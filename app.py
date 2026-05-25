@@ -3,6 +3,11 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from uuid import uuid4
 import os
+import json
+import zipfile
+import shutil
+import tempfile
+import sqlite3
 
 from io import BytesIO
 from xml.sax.saxutils import escape
@@ -536,6 +541,332 @@ def guardar_pdf_factura(pdf):
         "UPLOAD_FOLDER_FACTURAS",
         "uploads/facturas"
     )
+
+# ==========================
+# RESPALDOS DEL SISTEMA
+# ==========================
+
+def generar_nombre_respaldo():
+    fecha = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return f"backup_laboratorio_{fecha}.zip"
+
+
+def obtener_ruta_database():
+    return os.path.join(app.root_path, "database.db")
+
+
+def normalizar_ruta_zip(ruta):
+    return ruta.replace(os.sep, "/")
+
+
+def agregar_archivo_a_zip(zip_file, ruta_absoluta, ruta_en_zip):
+    if not os.path.isfile(ruta_absoluta):
+        return False
+
+    zip_file.write(
+        ruta_absoluta,
+        normalizar_ruta_zip(ruta_en_zip)
+    )
+
+    return True
+
+
+def agregar_carpeta_a_zip(zip_file, carpeta_absoluta, carpeta_en_zip):
+    carpeta_en_zip = normalizar_ruta_zip(carpeta_en_zip).strip("/") + "/"
+    total_archivos = 0
+
+    zip_file.writestr(carpeta_en_zip, "")
+
+    if not os.path.isdir(carpeta_absoluta):
+        return total_archivos
+
+    for raiz, _, archivos in os.walk(carpeta_absoluta):
+        ruta_relativa_carpeta = os.path.relpath(raiz, carpeta_absoluta)
+
+        if ruta_relativa_carpeta != ".":
+            ruta_carpeta_zip = normalizar_ruta_zip(
+                os.path.join(carpeta_en_zip, ruta_relativa_carpeta)
+            ).strip("/") + "/"
+
+            zip_file.writestr(ruta_carpeta_zip, "")
+
+        for archivo in archivos:
+            ruta_absoluta_archivo = os.path.join(raiz, archivo)
+            ruta_relativa_archivo = os.path.relpath(
+                ruta_absoluta_archivo,
+                carpeta_absoluta
+            )
+
+            ruta_archivo_zip = normalizar_ruta_zip(
+                os.path.join(carpeta_en_zip, ruta_relativa_archivo)
+            )
+
+            zip_file.write(ruta_absoluta_archivo, ruta_archivo_zip)
+            total_archivos += 1
+
+    return total_archivos
+
+
+def generar_metadata_respaldo(nombre_respaldo, conteos, archivos_incluidos):
+    return {
+        "tipo": "backup_laboratorio",
+        "version_formato": 1,
+        "nombre_archivo": nombre_respaldo,
+        "fecha_generacion": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "incluye": [
+            "database.db",
+            "uploads/fotos",
+            "uploads/pdfs",
+            "uploads/facturas"
+        ],
+        "conteos": conteos,
+        "archivos_incluidos": archivos_incluidos
+    }
+
+
+def construir_zip_respaldo(nombre_respaldo):
+    ruta_db = obtener_ruta_database()
+
+    if not os.path.isfile(ruta_db):
+        raise FileNotFoundError("No se encontró database.db.")
+
+    conteos = {
+        "materiales": Material.query.count(),
+        "facturas": Factura.query.count()
+    }
+
+    # Cerramos la sesión antes de leer/copiar la base SQLite.
+    db.session.remove()
+
+    buffer = BytesIO()
+
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        archivo_db_incluido = agregar_archivo_a_zip(
+            zip_file,
+            ruta_db,
+            "database.db"
+        )
+
+        if not archivo_db_incluido:
+            raise FileNotFoundError("No se pudo agregar database.db al respaldo.")
+
+        zip_file.writestr("uploads/", "")
+
+        archivos_fotos = agregar_carpeta_a_zip(
+            zip_file,
+            app.config["UPLOAD_FOLDER_FOTOS"],
+            "uploads/fotos"
+        )
+
+        archivos_pdfs = agregar_carpeta_a_zip(
+            zip_file,
+            app.config["UPLOAD_FOLDER_PDFS"],
+            "uploads/pdfs"
+        )
+
+        archivos_facturas = agregar_carpeta_a_zip(
+            zip_file,
+            app.config["UPLOAD_FOLDER_FACTURAS"],
+            "uploads/facturas"
+        )
+
+        archivos_incluidos = {
+            "fotos": archivos_fotos,
+            "pdfs_materiales": archivos_pdfs,
+            "pdfs_facturas": archivos_facturas
+        }
+
+        metadata = generar_metadata_respaldo(
+            nombre_respaldo,
+            conteos,
+            archivos_incluidos
+        )
+
+        zip_file.writestr(
+            "metadata.json",
+            json.dumps(metadata, ensure_ascii=False, indent=2)
+        )
+
+    buffer.seek(0)
+
+    return buffer
+
+def obtener_ruta_uploads():
+    return os.path.join(app.static_folder, "uploads")
+
+
+def obtener_ruta_backups_automaticos():
+    ruta = os.path.join(app.root_path, "backups")
+    os.makedirs(ruta, exist_ok=True)
+    return ruta
+
+
+def asegurar_carpetas_uploads():
+    os.makedirs(app.config["UPLOAD_FOLDER_FOTOS"], exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER_PDFS"], exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER_FACTURAS"], exist_ok=True)
+
+
+def generar_nombre_respaldo_automatico():
+    fecha = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return f"autobackup_antes_importar_{fecha}.zip"
+
+
+def limpiar_respaldos_automaticos(limite=5):
+    ruta_backups = obtener_ruta_backups_automaticos()
+
+    respaldos = []
+
+    for nombre in os.listdir(ruta_backups):
+        if nombre.startswith("autobackup_antes_importar_") and nombre.endswith(".zip"):
+            ruta = os.path.join(ruta_backups, nombre)
+
+            if os.path.isfile(ruta):
+                respaldos.append((ruta, os.path.getmtime(ruta)))
+
+    respaldos.sort(key=lambda item: item[1], reverse=True)
+
+    for ruta, _ in respaldos[limite:]:
+        try:
+            os.remove(ruta)
+        except OSError as error:
+            print(f"No se pudo eliminar respaldo automático antiguo {ruta}: {error}")
+
+
+def crear_respaldo_automatico_pre_importacion():
+    ruta_backups = obtener_ruta_backups_automaticos()
+    nombre_respaldo = generar_nombre_respaldo_automatico()
+    ruta_respaldo = os.path.join(ruta_backups, nombre_respaldo)
+
+    zip_buffer = construir_zip_respaldo(nombre_respaldo)
+
+    with open(ruta_respaldo, "wb") as archivo:
+        archivo.write(zip_buffer.getvalue())
+
+    limpiar_respaldos_automaticos(limite=5)
+
+    return ruta_respaldo
+
+
+def nombre_zip_seguro(nombre):
+    nombre_normalizado = nombre.replace("\\", "/")
+
+    if not nombre_normalizado:
+        return False
+
+    if nombre_normalizado.startswith("/"):
+        return False
+
+    if nombre_normalizado.startswith("../"):
+        return False
+
+    partes = nombre_normalizado.split("/")
+
+    if ".." in partes:
+        return False
+
+    if partes[0].endswith(":"):
+        return False
+
+    return True
+
+
+def validar_estructura_zip_respaldo(ruta_zip):
+    if not zipfile.is_zipfile(ruta_zip):
+        return "El archivo seleccionado no es un ZIP válido."
+
+    try:
+        with zipfile.ZipFile(ruta_zip, "r") as zip_file:
+            archivo_danado = zip_file.testzip()
+
+            if archivo_danado:
+                return f"El respaldo contiene un archivo dañado: {archivo_danado}"
+
+            nombres = zip_file.namelist()
+
+            for nombre in nombres:
+                if not nombre_zip_seguro(nombre):
+                    return "El ZIP contiene rutas no seguras y no puede importarse."
+
+            nombres_normalizados = {nombre.replace("\\", "/") for nombre in nombres}
+
+            if "database.db" not in nombres_normalizados:
+                return "El respaldo no contiene database.db."
+
+            tiene_uploads = any(
+                nombre == "uploads/" or nombre.startswith("uploads/")
+                for nombre in nombres_normalizados
+            )
+
+            if not tiene_uploads:
+                return "El respaldo no contiene la carpeta uploads."
+
+    except zipfile.BadZipFile:
+        return "El archivo seleccionado no es un ZIP válido."
+
+    return None
+
+
+def validar_database_importada(ruta_db):
+    if not os.path.isfile(ruta_db):
+        return "No se encontró database.db dentro del respaldo."
+
+    try:
+        conexion = sqlite3.connect(ruta_db)
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tablas = {fila[0] for fila in cursor.fetchall()}
+
+        conexion.close()
+    except sqlite3.Error:
+        return "database.db no es una base SQLite válida."
+
+    tablas_requeridas = {
+        "material",
+        "material_foto",
+        "material_pdf",
+        "factura"
+    }
+
+    faltantes = tablas_requeridas - tablas
+
+    if faltantes:
+        faltantes_texto = ", ".join(sorted(faltantes))
+        return f"La base de datos del respaldo no tiene las tablas requeridas: {faltantes_texto}."
+
+    return None
+
+
+def extraer_zip_respaldo(ruta_zip, carpeta_destino):
+    with zipfile.ZipFile(ruta_zip, "r") as zip_file:
+        zip_file.extractall(carpeta_destino)
+
+
+def restaurar_respaldo_extraido(carpeta_extraida):
+    ruta_db_nueva = os.path.join(carpeta_extraida, "database.db")
+    ruta_uploads_nueva = os.path.join(carpeta_extraida, "uploads")
+
+    ruta_db_actual = obtener_ruta_database()
+    ruta_uploads_actual = obtener_ruta_uploads()
+
+    db.session.remove()
+    db.engine.dispose()
+
+    if os.path.exists(ruta_db_actual):
+        os.remove(ruta_db_actual)
+
+    shutil.copy2(ruta_db_nueva, ruta_db_actual)
+
+    if os.path.isdir(ruta_uploads_actual):
+        shutil.rmtree(ruta_uploads_actual)
+
+    if os.path.isdir(ruta_uploads_nueva):
+        shutil.copytree(ruta_uploads_nueva, ruta_uploads_actual)
+    else:
+        os.makedirs(ruta_uploads_actual, exist_ok=True)
+
+    asegurar_carpetas_uploads()
 
 @app.route("/autenticarse", methods=["POST"])
 def autenticarse():
@@ -1139,6 +1470,84 @@ def eliminar_factura(id):
 
     flash("Factura eliminada correctamente.", "success")
     return redirect(url_for("listar_facturas"))
+
+
+# PLACEHOLDERS DE RESPALDOS
+@app.route("/respaldos/exportar")
+@requiere_modo_edicion
+def exportar_respaldo():
+    nombre_respaldo = generar_nombre_respaldo()
+
+    try:
+        zip_buffer = construir_zip_respaldo(nombre_respaldo)
+    except Exception as error:
+        print(f"Error al generar respaldo: {error}")
+        flash("No se pudo generar el respaldo del sistema.", "error")
+        return redirect(url_for("menu"))
+
+    return send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=nombre_respaldo
+    )
+
+
+@app.route("/respaldos/importar", methods=["GET", "POST"])
+@requiere_modo_edicion
+def importar_respaldo():
+    if request.method == "GET":
+        return render_template("respaldos/importar.html")
+
+    archivo = request.files.get("archivo_respaldo")
+    confirmacion = request.form.get("confirmar_importacion")
+
+    if confirmacion != "si":
+        flash("Debes confirmar que entiendes que se reemplazará la información actual.", "error")
+        return redirect(url_for("importar_respaldo"))
+
+    if not archivo or not archivo.filename:
+        flash("Debes seleccionar un archivo de respaldo ZIP.", "error")
+        return redirect(url_for("importar_respaldo"))
+
+    filename = secure_filename(archivo.filename)
+
+    if not filename.lower().endswith(".zip"):
+        flash("El archivo de respaldo debe tener extensión .zip.", "error")
+        return redirect(url_for("importar_respaldo"))
+
+    with tempfile.TemporaryDirectory() as carpeta_temporal:
+        ruta_zip = os.path.join(carpeta_temporal, filename)
+        carpeta_extraida = os.path.join(carpeta_temporal, "respaldo_extraido")
+
+        archivo.save(ruta_zip)
+
+        error_zip = validar_estructura_zip_respaldo(ruta_zip)
+
+        if error_zip:
+            flash(error_zip, "error")
+            return redirect(url_for("importar_respaldo"))
+
+        os.makedirs(carpeta_extraida, exist_ok=True)
+        extraer_zip_respaldo(ruta_zip, carpeta_extraida)
+
+        ruta_db_importada = os.path.join(carpeta_extraida, "database.db")
+        error_db = validar_database_importada(ruta_db_importada)
+
+        if error_db:
+            flash(error_db, "error")
+            return redirect(url_for("importar_respaldo"))
+
+        try:
+            ruta_autobackup = crear_respaldo_automatico_pre_importacion()
+            restaurar_respaldo_extraido(carpeta_extraida)
+        except Exception as error:
+            print(f"Error al importar respaldo: {error}")
+            flash("Ocurrió un error al importar el respaldo. No se pudo completar la restauración.", "error")
+            return redirect(url_for("importar_respaldo"))
+
+    flash("Respaldo importado correctamente. Se generó una copia automática del estado anterior.", "success")
+    return redirect(url_for("menu"))
 
 
 with app.app_context():

@@ -163,6 +163,160 @@
     </div>
 </div>
 
+<div style="margin-bottom: 36px;">
+    <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 16px;">
+        Respaldos del Sistema
+    </h2>
+
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 18px; color: var(--text-muted); font-size: 0.875rem; display:flex; gap:10px; align-items:flex-start;">
+        <i class="material-symbols-rounded" style="color:var(--primary); font-size: 22px;">info</i>
+        <div>
+            <strong style="color: var(--text-main);">Respaldo completo del sistema.</strong>
+            Exporta o importa un paquete ZIP con la base de datos y los archivos cargados.
+            Al importar, se reemplazará la información actual del sistema.
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+        {% if modo_edicion %}
+            <button type="button"
+                id="abrirModalExportarRespaldo"
+                style="border:0; padding:0; background:transparent; text-align:left; color:inherit; width:100%;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #E0F2FE; color: #0369A1; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">download</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Exportar Respaldo</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Descargar base de datos y archivos</p>
+                    </div>
+                </div>
+            </div>
+        </button>
+
+            <a href="{{ url_for('importar_respaldo') }}" style="text-decoration:none; color:inherit;">
+                <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <div style="background: #FEE2E2; color: #B91C1C; padding: 16px; border-radius: var(--radius-md);">
+                            <i class="material-symbols-rounded" style="font-size: 32px;">upload_file</i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Importar Respaldo</h3>
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Restaurar desde archivo ZIP</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% else %}
+            <div class="card" title="Activa el modo edición para exportar respaldos" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Exportar Respaldo</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" title="Activa el modo edición para importar respaldos" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Importar Respaldo</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+
+        <div class="card" style="height: 100%; opacity: 0;"></div>
+        <div class="card" style="height: 100%; opacity: 0;"></div>
+    </div>
+</div>
+
+{% if modo_edicion %}
+<div id="modalExportarRespaldo"
+     class="modal"
+     style="display:none;">
+    <div class="modal-contenido">
+        <span class="cerrar-modal" id="cerrarModalExportarRespaldo">&times;</span>
+
+        <h2>Exportar respaldo</h2>
+
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px; line-height: 1.5;">
+            Estás a punto de generar una copia completa del sistema. El respaldo incluirá la base de datos
+            y los archivos cargados en fotos, PDFs de materiales y PDFs de facturas.
+        </p>
+
+        <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-top: 18px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+            Podrás guardar el archivo ZIP en Descargas, USB, Drive o cualquier ubicación que elijas desde tu navegador.
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+            <button type="button" id="cancelarModalExportarRespaldo" class="btn btn-secondary">
+                Cancelar
+            </button>
+
+            <a href="{{ url_for('exportar_respaldo') }}"
+                id="confirmarExportarRespaldo"
+                class="btn btn-primary"
+                style="text-decoration:none;">
+                    <i class="material-symbols-rounded">download</i>
+                    Generar respaldo
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("modalExportarRespaldo");
+        const abrir = document.getElementById("abrirModalExportarRespaldo");
+        const cerrar = document.getElementById("cerrarModalExportarRespaldo");
+        const cancelar = document.getElementById("cancelarModalExportarRespaldo");
+        const confirmar = document.getElementById("confirmarExportarRespaldo");
+
+        function cerrarModalExportar() {
+            if (modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        if (abrir && modal) {
+            abrir.addEventListener("click", function () {
+                modal.style.display = "flex";
+            });
+        }
+
+        if (cerrar) {
+            cerrar.addEventListener("click", cerrarModalExportar);
+        }
+
+        if (cancelar) {
+            cancelar.addEventListener("click", cerrarModalExportar);
+        }
+
+        if (confirmar) {
+            confirmar.addEventListener("click", function () {
+                cerrarModalExportar();
+            });
+        }
+
+        window.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                cerrarModalExportar();
+            }
+        });
+    });
+</script>
+{% endif %}
+
 <div style="display: flex; justify-content: center; align-items: flex-end; margin-top: 5px; flex-grow: 1;">
     <img src="{{ url_for('static', filename='css/dibujolab.png') }}"
          alt="Ilustración Laboratorio"
