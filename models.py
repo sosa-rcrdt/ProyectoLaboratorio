@@ -60,3 +60,20 @@ class MaterialPDF(db.Model):
 
     def __repr__(self):
         return f"<MaterialPDF {self.archivo}>"
+
+
+class Factura(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    doctor_responsable = db.Column(db.String(150), nullable=False)
+    puesto_responsable = db.Column(db.String(100), nullable=True)
+    area_responsable = db.Column(db.String(150), nullable=True)
+
+    presupuesto = db.Column(db.String(50), nullable=False)
+    fecha_factura = db.Column(db.Date, nullable=True)
+
+    descripcion = db.Column(db.Text, nullable=True)
+    archivo_pdf = db.Column(db.String(255), nullable=True)
+
+    def __repr__(self):
+        return f"<Factura {self.doctor_responsable} - {self.presupuesto}>"
