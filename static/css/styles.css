@@ -247,6 +247,28 @@ p.page-subtitle {
   color: white;
 }
 
+/* Caja de información inline (ej. contador Total) alineada con botones */
+.info-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  font-weight: 700;
+}
+
+.info-inline .info-value {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  display: block;
+}
+.info-inline .info-value strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
 /* Tablas */
 .table-wrapper {
   background: var(--surface);

@@ -11,8 +11,8 @@
     </div>
 
     <div style="display:flex; gap:12px; align-items:center;">
-        <div style="background: var(--surface); padding: 12px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 1.25rem; color: var(--text-muted); display:block;">Total: <strong style="color: var(--primary);">{{ total_materiales }}</strong></span>
+        <div class="info-inline" role="status" aria-label="Total de materiales">
+            <span class="info-value">Total: <strong>{{ total_materiales }}</strong></span>
         </div>
 
         {% if modo_edicion %}
