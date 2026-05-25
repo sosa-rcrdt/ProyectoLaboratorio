@@ -32,7 +32,7 @@
     {% if resultados %}
         <div class="card" style="padding: 0; overflow: hidden;">
             <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
-                <table style="min-width: 1550px;">
+                <table style="min-width: {% if modo_edicion %}1550px{% else %}1400px{% endif %};">
                     <thead>
                         <tr>
                             <th>Material</th>
@@ -48,7 +48,9 @@
                             <th>Ubicación</th>
                             <th>Estado</th>
                             <th>Archivos</th>
-                            <th style="text-align: right;">Acciones</th>
+                            {% if modo_edicion %}
+                                <th style="text-align: right;">Acciones</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -119,10 +121,13 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td style="text-align: right;">
-                                <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Editar</a>
-                                <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Eliminar</button>
-                            </td>
+
+                            {% if modo_edicion %}
+                                <td style="text-align: right;">
+                                    <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">Editar</a>
+                                    <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">Eliminar</button>
+                                </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

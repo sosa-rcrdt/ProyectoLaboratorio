@@ -14,13 +14,57 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
     <!-- Inline fix para Material Symbols -->
     <style>
       .material-symbols-rounded {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
+
+      .nav-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .modo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid var(--border-color);
+        background: var(--surface);
+        color: var(--text-muted);
+      }
+
+      .modo-badge.edicion {
+        color: var(--success);
+        background: rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.25);
+      }
+
+      .modo-badge.consulta {
+        color: var(--text-muted);
+      }
+
+      .auth-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+      }
     </style>
 </head>
+
 <body>
 
     <div class="app-container">
@@ -36,24 +80,34 @@
                     <i class="material-symbols-rounded">dashboard</i>
                     PANEL PRINCIPAL
                 </a>
-                <a href="{{ url_for('crear_material') }}" class="nav-item {% if request.endpoint == 'crear_material' %}active{% endif %}">
-                    <i class="material-symbols-rounded">add_box</i>
-                    NUEVO MATERIAL
-                </a>
+
+                {% if modo_edicion %}
+                    <a href="{{ url_for('crear_material') }}" class="nav-item {% if request.endpoint == 'crear_material' %}active{% endif %}">
+                        <i class="material-symbols-rounded">add_box</i>
+                        NUEVO MATERIAL
+                    </a>
+                {% else %}
+                    <span class="nav-item nav-disabled" title="Activa el modo edición para crear materiales">
+                        <i class="material-symbols-rounded">add_box</i>
+                        NUEVO MATERIAL
+                    </span>
+                {% endif %}
+
                 <a href="{{ url_for('buscar_material') }}" class="nav-item {% if request.endpoint == 'buscar_material' %}active{% endif %}">
                     <i class="material-symbols-rounded">search</i>
                     BÚSQUEDA
                 </a>
+
                 <a href="{{ url_for('materiales_por_profesor') }}" class="nav-item {% if request.endpoint == 'materiales_por_profesor' %}active{% endif %}">
                     <i class="material-symbols-rounded">school</i>
                     POR PROFESOR
                 </a>
+
                 <a href="{{ url_for('listar_materiales') }}" class="nav-item {% if request.endpoint == 'listar_materiales' %}active{% endif %}">
                     <i class="material-symbols-rounded">inventory_2</i>
                     LISTADO GENERAL
                 </a>
             </nav>
-
         </aside>
 
         <!-- MAIN CONTENT AREA -->
@@ -61,6 +115,30 @@
             <!-- TOPBAR -->
             <header class="topbar">
                 <div class="topbar-title">Inventario de Laboratorio</div>
+
+                <div class="topbar-actions">
+                    {% if modo_edicion %}
+                        <span class="modo-badge edicion">
+                            <i class="material-symbols-rounded" style="font-size: 16px;">edit</i>
+                            Modo edición
+                        </span>
+
+                        <a href="{{ url_for('salir_modo_edicion') }}" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.8rem;">
+                            <i class="material-symbols-rounded" style="font-size: 18px;">logout</i>
+                            Salir del modo edición
+                        </a>
+                    {% else %}
+                        <span class="modo-badge consulta">
+                            <i class="material-symbols-rounded" style="font-size: 16px;">visibility</i>
+                            Modo consulta
+                        </span>
+
+                        <button type="button" id="abrirAuthModal" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.8rem;">
+                            <i class="material-symbols-rounded" style="font-size: 18px;">lock_open</i>
+                            Autenticarse
+                        </button>
+                    {% endif %}
+                </div>
             </header>
 
             <!-- PAGE CONTENT -->
@@ -85,6 +163,44 @@
         </main>
     </div>
 
+    <!-- Modal de autenticación -->
+    <div id="authModal" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar-modal" id="cerrarAuthModal">&times;</span>
+
+            <h2>Activar modo edición</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">
+                Ingresa la contraseña para habilitar creación, edición y eliminación de materiales.
+            </p>
+
+            <form method="POST" action="{{ url_for('autenticarse') }}" style="margin-top: 20px;">
+                <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+
+                <div class="form-group">
+                    <label for="passwordEdicion" class="form-label">Contraseña</label>
+                    <input type="password"
+                           class="form-control"
+                           id="passwordEdicion"
+                           name="password"
+                           placeholder="Contraseña de edición"
+                           required
+                           autocomplete="current-password">
+                </div>
+
+                <div class="auth-modal-actions">
+                    <button type="button" id="cancelarAuthModal" class="btn btn-secondary">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-symbols-rounded">check_circle</i>
+                        Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modales Generales -->
     <div id="archivoModal" class="modal">
         <div class="modal-contenido modal-grande">
@@ -107,5 +223,51 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const authModal = document.getElementById("authModal");
+            const abrirAuthModal = document.getElementById("abrirAuthModal");
+            const cerrarAuthModal = document.getElementById("cerrarAuthModal");
+            const cancelarAuthModal = document.getElementById("cancelarAuthModal");
+            const passwordEdicion = document.getElementById("passwordEdicion");
+
+            if (abrirAuthModal && authModal) {
+                abrirAuthModal.addEventListener("click", function () {
+                    authModal.style.display = "flex";
+
+                    setTimeout(function () {
+                        if (passwordEdicion) {
+                            passwordEdicion.focus();
+                        }
+                    }, 100);
+                });
+            }
+
+            function cerrarModalAuth() {
+                if (authModal) {
+                    authModal.style.display = "none";
+                }
+
+                if (passwordEdicion) {
+                    passwordEdicion.value = "";
+                }
+            }
+
+            if (cerrarAuthModal) {
+                cerrarAuthModal.addEventListener("click", cerrarModalAuth);
+            }
+
+            if (cancelarAuthModal) {
+                cancelarAuthModal.addEventListener("click", cerrarModalAuth);
+            }
+
+            window.addEventListener("click", function (event) {
+                if (event.target === authModal) {
+                    cerrarModalAuth();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

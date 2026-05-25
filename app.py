@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from uuid import uuid4
@@ -6,6 +6,7 @@ import os
 
 from config import Config
 from models import db, Material, MaterialFoto, MaterialPDF
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -17,6 +18,28 @@ db.init_app(app)
 # Crear carpetas de uploads si no existen
 os.makedirs(app.config["UPLOAD_FOLDER_FOTOS"], exist_ok=True)
 os.makedirs(app.config["UPLOAD_FOLDER_PDFS"], exist_ok=True)
+
+def modo_edicion_activo():
+    return session.get("modo_edicion") is True
+
+
+def requiere_modo_edicion(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not modo_edicion_activo():
+            flash("Debes autenticarte para modificar materiales.", "error")
+            return redirect(url_for("autenticarse", next=request.path))
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@app.context_processor
+def inyectar_modo_edicion():
+    return {
+        "modo_edicion": modo_edicion_activo()
+    }
 
 
 PROFESORES = {
@@ -183,6 +206,29 @@ def guardar_pdfs_de_material(material, pdfs):
             )
             db.session.add(material_pdf)
 
+@app.route("/autenticarse", methods=["POST"])
+def autenticarse():
+    siguiente = request.form.get("next") or request.referrer or url_for("menu")
+
+    if not siguiente.startswith("/"):
+        siguiente = url_for("menu")
+
+    password = request.form.get("password", "")
+
+    if password == app.config["EDIT_PASSWORD"]:
+        session["modo_edicion"] = True
+        flash("Modo edición activado correctamente.", "success")
+        return redirect(siguiente)
+
+    flash("Contraseña incorrecta.", "error")
+    return redirect(siguiente)
+
+
+@app.route("/salir-modo-edicion")
+def salir_modo_edicion():
+    session.pop("modo_edicion", None)
+    flash("Has salido del modo edición.", "success")
+    return redirect(url_for("menu"))
 
 # MENÚ PRINCIPAL
 @app.route("/")
@@ -205,6 +251,7 @@ def listar_materiales():
 
 # CREAR MATERIAL
 @app.route("/materiales/crear", methods=["GET", "POST"])
+@requiere_modo_edicion
 def crear_material():
     current_year = datetime.now().year
     estados_validos = ["Disponible", "En préstamo", "Fuera de servicio", "En mantenimiento"]
@@ -354,6 +401,7 @@ def materiales_por_profesor():
 
 # EDITAR MATERIAL
 @app.route("/materiales/editar/<int:id>", methods=["GET", "POST"])
+@requiere_modo_edicion
 def editar_material(id):
     current_year = datetime.now().year
     material = Material.query.get_or_404(id)
@@ -438,6 +486,7 @@ def editar_material(id):
 
 # ELIMINAR UNA FOTO ESPECÍFICA
 @app.route("/materiales/foto/eliminar/<int:foto_id>", methods=["POST"])
+@requiere_modo_edicion
 def eliminar_foto_material(foto_id):
     foto = MaterialFoto.query.get_or_404(foto_id)
     material_id = foto.material_id
@@ -453,6 +502,7 @@ def eliminar_foto_material(foto_id):
 
 # ELIMINAR UN PDF ESPECÍFICO
 @app.route("/materiales/pdf/eliminar/<int:pdf_id>", methods=["POST"])
+@requiere_modo_edicion
 def eliminar_pdf_material(pdf_id):
     pdf = MaterialPDF.query.get_or_404(pdf_id)
     material_id = pdf.material_id
@@ -468,6 +518,7 @@ def eliminar_pdf_material(pdf_id):
 
 # ELIMINAR MATERIAL COMPLETO
 @app.route("/materiales/eliminar/<int:id>", methods=["POST"])
+@requiere_modo_edicion
 def eliminar_material(id):
     material = Material.query.get_or_404(id)
 

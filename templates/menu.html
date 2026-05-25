@@ -9,19 +9,33 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
     
     <!-- Card 1 -->
-    <a href="{{ url_for('crear_material') }}" style="text-decoration:none; color:inherit;">
-    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
-        <div style="display:flex; align-items:center; gap: 16px;">
-            <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
-                <i class="material-symbols-rounded" style="font-size: 32px;">add_box</i>
+    {% if modo_edicion %}
+        <a href="{{ url_for('crear_material') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">add_box</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Añadir componentes al inventario</p>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Añadir componentes al inventario</p>
+        </a>
+    {% else %}
+        <div class="card" title="Activa el modo edición para crear materiales" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
+            <div style="display:flex; align-items:center; gap: 16px;">
+                <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
+                    <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+                </div>
             </div>
         </div>
-    </div>
-    </a>
+    {% endif %}
 
     <!-- Card 2 -->
     <a href="{{ url_for('buscar_material') }}" style="text-decoration:none; color:inherit;">
@@ -32,7 +46,7 @@
             </div>
             <div>
                 <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Búsqueda</h3>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Por número de serie o nombre</p>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Por nombre, marca, serie, inventario o año</p>
             </div>
         </div>
     </div>

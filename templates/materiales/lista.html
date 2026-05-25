@@ -12,20 +12,25 @@
 
     <div style="display:flex; gap:12px; align-items:center;">
         <div style="background: var(--surface); padding: 12px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.75rem; color: var(--text-muted); display:block;">Total</span>
-            <strong style="font-size: 1.25rem; color: var(--primary);">{{ total_materiales }}</strong>
+            <span style="font-size: 1.25rem; color: var(--text-muted); display:block;">Total: <strong style="color: var(--primary);">{{ total_materiales }}</strong></span>
         </div>
 
-        <a href="{{ url_for('crear_material') }}" class="btn btn-primary">
-            <i class="material-symbols-rounded">add</i> Nuevo
-        </a>
+        {% if modo_edicion %}
+            <a href="{{ url_for('crear_material') }}" class="btn btn-primary">
+                <i class="material-symbols-rounded">add</i> Nuevo
+            </a>
+        {% else %}
+            <button type="button" class="btn btn-secondary" disabled style="opacity: 0.55; cursor: not-allowed;" title="Activa el modo edición para registrar materiales">
+                <i class="material-symbols-rounded">lock</i> Nuevo
+            </button>
+        {% endif %}
     </div>
 </div>
 
 <div class="card" style="padding: 0; overflow: hidden;">
     {% if materiales %}
     <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
-        <table style="min-width: 1650px;">
+        <table style="min-width: {% if modo_edicion %}1650px{% else %}1500px{% endif %};">
             <thead>
                 <tr>
                     <th>Material</th>
@@ -41,7 +46,9 @@
                     <th>Ubicación</th>
                     <th>Estado</th>
                     <th>Archivos</th>
-                    <th style="text-align: right;">Acciones</th>
+                    {% if modo_edicion %}
+                        <th style="text-align: right;">Acciones</th>
+                    {% endif %}
                 </tr>
             </thead>
 
@@ -122,14 +129,16 @@
                         </div>
                     </td>
 
-                    <td style="text-align: right;">
-                        <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
-                            Editar
-                        </a>
-                        <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">
-                            Eliminar
-                        </button>
-                    </td>
+                    {% if modo_edicion %}
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
+                                Editar
+                            </a>
+                            <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">
+                                Eliminar
+                            </button>
+                        </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -139,7 +148,11 @@
         <div style="padding: 40px; text-align: center; color: var(--text-muted);">
             <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">inventory_2</i>
             <h3>No hay registros</h3>
-            <p>El inventario está vacío. Empieza registrando el primer material.</p>
+            {% if modo_edicion %}
+                <p>El inventario está vacío. Empieza registrando el primer material.</p>
+            {% else %}
+                <p>El inventario está vacío. Activa el modo edición para registrar materiales.</p>
+            {% endif %}
         </div>
     {% endif %}
 </div>
