@@ -41,7 +41,7 @@ def requiere_modo_edicion(func):
     def wrapper(*args, **kwargs):
         if not modo_edicion_activo():
             session["next_modo_edicion"] = request.path
-            flash("Debes autenticarte para modificar materiales.", "error")
+            flash("Debes autenticarte para realizar modificaciones.", "error")
             return redirect(url_for("menu"))
 
         return func(*args, **kwargs)
@@ -557,6 +557,31 @@ def eliminar_material(id):
 
     flash("Material eliminado correctamente.", "success")
     return redirect(url_for("listar_materiales"))
+
+# PLACEHOLDERS DE FACTURAS
+@app.route("/facturas")
+def listar_facturas():
+    flash("Sección de facturas en construcción.", "info")
+    return redirect(url_for("menu"))
+
+
+@app.route("/facturas/buscar", methods=["GET", "POST"])
+def buscar_factura():
+    flash("Búsqueda de facturas en construcción.", "info")
+    return redirect(url_for("menu"))
+
+
+@app.route("/facturas/profesor", methods=["GET", "POST"])
+def facturas_por_profesor():
+    flash("Filtro de facturas por profesor en construcción.", "info")
+    return redirect(url_for("menu"))
+
+
+@app.route("/facturas/crear", methods=["GET", "POST"])
+@requiere_modo_edicion
+def crear_factura():
+    flash("Registro de facturas en construcción.", "info")
+    return redirect(url_for("menu"))
 
 
 with app.app_context():

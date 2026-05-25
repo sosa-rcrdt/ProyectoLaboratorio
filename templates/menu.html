@@ -3,88 +3,170 @@
 {% block title %}Panel Principal{% endblock %}
 
 {% block content %}
+
 <h1 class="page-title">Estado del Inventario Global</h1>
 <p class="page-subtitle">Bienvenido al Panel de Gestión de Precisión</p>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
-    
-    <!-- Card 1 -->
-    {% if modo_edicion %}
-        <a href="{{ url_for('crear_material') }}" style="text-decoration:none; color:inherit;">
+<div style="margin-bottom: 36px;">
+    <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 16px;">
+        Materiales de Laboratorio
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+        <a href="{{ url_for('listar_materiales') }}" style="text-decoration:none; color:inherit;">
             <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
                 <div style="display:flex; align-items:center; gap: 16px;">
-                    <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
-                        <i class="material-symbols-rounded" style="font-size: 32px;">add_box</i>
+                    <div style="background: #DCFCE7; color: #15803D; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">list_alt</i>
                     </div>
                     <div>
-                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
-                        <p style="font-size: 0.875rem; color: var(--text-muted);">Añadir componentes al inventario</p>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Listado General</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Ver todos los materiales</p>
                     </div>
                 </div>
             </div>
         </a>
-    {% else %}
-        <div class="card" title="Activa el modo edición para crear materiales" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
-            <div style="display:flex; align-items:center; gap: 16px;">
-                <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
-                    <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+
+        <a href="{{ url_for('buscar_material') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #E0E7FF; color: #4338CA; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">search</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Búsqueda</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Por nombre, marca, serie, inventario o año</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
-                    <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('materiales_por_profesor') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #FEF3C7; color: #D97706; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">school</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Por Profesor</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Filtrar materiales asignados</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    {% endif %}
+        </a>
 
-    <!-- Card 2 -->
-    <a href="{{ url_for('buscar_material') }}" style="text-decoration:none; color:inherit;">
-    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
-        <div style="display:flex; align-items:center; gap: 16px;">
-            <div style="background: #E0E7FF; color: #4338CA; padding: 16px; border-radius: var(--radius-md);">
-                <i class="material-symbols-rounded" style="font-size: 32px;">search</i>
+        {% if modo_edicion %}
+            <a href="{{ url_for('crear_material') }}" style="text-decoration:none; color:inherit;">
+                <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
+                            <i class="material-symbols-rounded" style="font-size: 32px;">add_box</i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Añadir material al inventario</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% else %}
+            <div class="card" title="Activa el modo edición para crear materiales" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nuevo Material</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Búsqueda</h3>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Por nombre, marca, serie, inventario o año</p>
-            </div>
-        </div>
+        {% endif %}
     </div>
-    </a>
+</div>
 
-    <!-- Card 3 -->
-    <a href="{{ url_for('materiales_por_profesor') }}" style="text-decoration:none; color:inherit;">
-    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
-        <div style="display:flex; align-items:center; gap: 16px;">
-            <div style="background: #FEF3C7; color: #D97706; padding: 16px; border-radius: var(--radius-md);">
-                <i class="material-symbols-rounded" style="font-size: 32px;">school</i>
-            </div>
-            <div>
-                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Por Profesor</h3>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Filtrar materiales asignados</p>
-            </div>
-        </div>
-    </div>
-    </a>
+<div style="margin-bottom: 36px;">
+    <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 16px;">
+        Facturas
+    </h2>
 
-    <!-- Card 4 -->
-    <a href="{{ url_for('listar_materiales') }}" style="text-decoration:none; color:inherit;">
-    <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
-        <div style="display:flex; align-items:center; gap: 16px;">
-            <div style="background: #DCFCE7; color: #15803D; padding: 16px; border-radius: var(--radius-md);">
-                <i class="material-symbols-rounded" style="font-size: 32px;">list_alt</i>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+        <a href="{{ url_for('listar_facturas') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #DBEAFE; color: #1D4ED8; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">receipt_long</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Listado General</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Ver todas las facturas</p>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Listado General</h3>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Ver todos los registros</p>
+        </a>
+
+        <a href="{{ url_for('buscar_factura') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #F3E8FF; color: #7E22CE; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">manage_search</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Búsqueda</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Por doctor, presupuesto, fecha o descripción</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </a>
+
+        <a href="{{ url_for('facturas_por_profesor') }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: #FFEDD5; color: #C2410C; padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">person_search</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Por Profesor</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Filtrar facturas por responsable</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        {% if modo_edicion %}
+            <a href="{{ url_for('crear_factura') }}" style="text-decoration:none; color:inherit;">
+                <div class="card" style="cursor: pointer; transition: transform 0.2s; height: 100%;">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <div style="background: var(--primary-light); color: var(--primary); padding: 16px; border-radius: var(--radius-md);">
+                            <i class="material-symbols-rounded" style="font-size: 32px;">post_add</i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nueva Factura</h3>
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Registrar factura en el sistema</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% else %}
+            <div class="card" title="Activa el modo edición para crear facturas" style="cursor: not-allowed; transition: transform 0.2s; height: 100%; opacity: 0.45;">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div style="background: var(--bg-color); color: var(--text-muted); padding: 16px; border-radius: var(--radius-md);">
+                        <i class="material-symbols-rounded" style="font-size: 32px;">lock</i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom:4px;">Nueva Factura</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Disponible solo en modo edición</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
-    </a>
 </div>
 
 <div style="display: flex; justify-content: center; align-items: flex-end; margin-top: 5px; flex-grow: 1;">
-    <img src="{{ url_for('static', filename='css/dibujolab.png') }}" alt="Ilustración Laboratorio" style="max-width: 350px; width: 100%; height: auto; opacity: 0.35; margin-bottom: 20px;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}"
+         alt="Ilustración Laboratorio"
+         style="max-width: 350px; width: 100%; height: auto; opacity: 0.35; margin-bottom: 20px;">
 </div>
 
 {% endblock %}
