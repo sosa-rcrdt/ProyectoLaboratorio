@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Factura{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+<div style="flex: 1; min-width: 300px; max-width: 900px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <div>
+            <h1 class="page-title">Editar Factura</h1>
+            <p class="page-subtitle">Actualiza la información administrativa y documental de la factura.</p>
+        </div>
+
+        <a href="{{ url_for('listar_facturas') }}" class="btn btn-secondary">
+            <i class="material-symbols-rounded">arrow_back</i> Atrás
+        </a>
+    </div>
+
+    {% if error %}
+        <div class="mensaje-flash error" id="errorBackendEditarFactura">
+            <i class="material-symbols-rounded" style="vertical-align: bottom; margin-right: 4px;">error</i>
+            <strong>{{ error }}</strong>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <form id="formEditarFactura"
+              method="POST"
+              enctype="multipart/form-data"
+              novalidate
+              data-pdf-actual="{% if factura.archivo_pdf %}true{% else %}false{% endif %}">
+
+            <div id="erroresEditarFactura" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
+
+            <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">person</i> Responsable de la Factura
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="doctor_responsable_factura" class="form-label">Profesor / Dr. Responsable</label>
+                    <select class="form-control" id="doctor_responsable_factura" name="doctor_responsable">
+                        <option value="">Seleccione un profesor</option>
+                        {% for nombre, datos_profesor in profesores.items() %}
+                            <option value="{{ nombre }}" {% if datos.get('doctor_responsable', factura.doctor_responsable) == nombre %}selected{% endif %}>
+                                {{ nombre }} - {{ datos_profesor.puesto }} - {{ datos_profesor.area }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div id="error_doctor_responsable_factura" class="campo-error"></div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">receipt_long</i> Información de Factura
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label for="presupuesto_factura" class="form-label">Presupuesto</label>
+                    <select class="form-control" id="presupuesto_factura" name="presupuesto">
+                        <option value="">Seleccione un presupuesto</option>
+                        {% for presupuesto in presupuestos %}
+                            <option value="{{ presupuesto }}" {% if datos.get('presupuesto', factura.presupuesto) == presupuesto %}selected{% endif %}>
+                                {{ presupuesto }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div id="error_presupuesto_factura" class="campo-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_factura" class="form-label">Fecha de la Factura</label>
+                    <input type="date"
+                           class="form-control"
+                           id="fecha_factura"
+                           name="fecha_factura"
+                           value="{{ datos.get('fecha_factura', factura.fecha_factura.isoformat() if factura.fecha_factura else '') }}">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="descripcion_factura" class="form-label">Descripción</label>
+                    <textarea class="form-control"
+                              id="descripcion_factura"
+                              name="descripcion"
+                              rows="3">{{ datos.get('descripcion', factura.descripcion or '') }}</textarea>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 16px; margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
+                <i class="material-symbols-rounded">picture_as_pdf</i> Archivo PDF
+            </h3>
+
+            <div style="background: var(--bg-color); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.875rem; color: var(--text-muted); display:flex; align-items:center; gap:8px; border: 1px dashed var(--border-color);">
+                <i class="material-symbols-rounded" style="color:var(--primary);">info</i>
+                Puedes reemplazar el PDF actual seleccionando uno nuevo. Solo se permite un PDF por factura.
+            </div>
+
+            <div class="form-group">
+                <label for="archivo_pdf_factura" class="form-label">Reemplazar PDF</label>
+                <input type="file"
+                       class="form-control"
+                       id="archivo_pdf_factura"
+                       name="archivo_pdf"
+                       accept="application/pdf">
+                <div id="error_archivo_pdf_factura" class="campo-error"></div>
+            </div>
+
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <h4 style="font-size: 0.9rem; color: var(--neutral); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    <i class="material-symbols-rounded" style="font-size:18px; color:var(--primary);">picture_as_pdf</i>
+                    PDF actual
+                </h4>
+
+                {% if factura.archivo_pdf %}
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--surface);">
+                        <button type="button"
+                                class="btn btn-secondary btn-modal"
+                                style="padding: 6px 10px; font-size: 0.75rem;"
+                                data-tipo="pdfs"
+                                data-titulo="Factura: {{ factura.doctor_responsable or 'Sin responsable' }}"
+                                data-archivos='{{ [factura.archivo_pdf]|tojson }}'>
+                            <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                            Ver PDF
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-danger btn-eliminar"
+                                data-url="{{ url_for('eliminar_pdf_factura', id=factura.id) }}"
+                                data-nombre="el PDF de esta factura"
+                                style="padding:6px 10px; font-size:0.75rem;">
+                            Eliminar PDF
+                        </button>
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Esta factura no tiene PDF registrado.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-top: 32px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                <a href="{{ url_for('listar_facturas') }}" class="btn" style="color: var(--text-muted); text-decoration: none;">Cancelar</a>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+                    <i class="material-symbols-rounded">save</i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div style="flex: 1; display: flex; justify-content: center; min-width: 300px; position: sticky; top: 40px;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}"
+         alt="Ilustración Laboratorio"
+         style="max-width: 550px; width: 100%; height: auto; opacity: 0.35; margin-top: 40px;">
+</div>
+</div>
+
+{% endblock %}

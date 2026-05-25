@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Facturas{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title">Listado General de Facturas</h1>
+        <p class="page-subtitle">Consulta general de facturas registradas en el laboratorio.</p>
+    </div>
+
+    <div style="display:flex; gap:12px; align-items:center;">
+        <div style="background: var(--surface); padding: 12px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <span style="font-size: 1.25rem; color: var(--text-muted); display:block;">
+                Total: <strong style="color: var(--primary);">{{ total_facturas }}</strong>
+            </span>
+        </div>
+
+        {% if modo_edicion %}
+            <a href="{{ url_for('crear_factura') }}" class="btn btn-primary">
+                <i class="material-symbols-rounded">add</i> Nueva
+            </a>
+        {% else %}
+            <button type="button" class="btn btn-secondary" disabled style="opacity: 0.55; cursor: not-allowed;" title="Activa el modo edición para registrar facturas">
+                <i class="material-symbols-rounded">lock</i> Nueva
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    {% if facturas %}
+        <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
+            <table style="min-width: {% if modo_edicion %}1250px{% else %}1100px{% endif %};">
+                <thead>
+                    <tr>
+                        <th>Doctor Responsable</th>
+                        <th>Presupuesto</th>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Archivo</th>
+                        {% if modo_edicion %}
+                            <th style="text-align: right;">Acciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for factura in facturas %}
+                    <tr>
+                        <td style="min-width: 220px; white-space: normal;">
+                            <div style="font-weight: 700; color: var(--text-main);">
+                                {{ factura.doctor_responsable or '—' }}
+                            </div>
+
+                            {% if factura.puesto_responsable or factura.area_responsable %}
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                    {{ factura.puesto_responsable or '—' }} · {{ factura.area_responsable or '—' }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span style="font-size:0.75rem; font-weight:700; color:var(--primary);">
+                                {{ factura.presupuesto or '—' }}
+                            </span>
+                        </td>
+
+                        <td>{{ factura.fecha_factura.strftime('%d/%m/%Y') if factura.fecha_factura else '—' }}</td>
+
+                        <td style="max-width: 320px;">
+                            <div title="{{ factura.descripcion or '' }}"
+                                 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ factura.descripcion or '—' }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if factura.archivo_pdf %}
+                                <button type="button"
+                                        class="btn btn-secondary btn-modal"
+                                        style="padding: 6px 10px; font-size: 0.75rem;"
+                                        data-tipo="pdfs"
+                                        data-titulo="Factura: {{ factura.doctor_responsable or 'Sin responsable' }}"
+                                        data-archivos='{{ [factura.archivo_pdf]|tojson }}'
+                                        title="Ver PDF">
+                                    <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                    Ver PDF
+                                </button>
+                            {% else %}
+                                <button disabled
+                                        class="btn"
+                                        style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;"
+                                        title="Sin PDF">
+                                    <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                </button>
+                            {% endif %}
+                        </td>
+
+                        {% if modo_edicion %}
+                            <td style="text-align: right;">
+                                <a href="{{ url_for('editar_factura', id=factura.id) }}"
+                                   class="btn btn-secondary"
+                                   style="padding: 6px 12px; font-size: 0.75rem;">
+                                    Editar
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-danger btn-eliminar"
+                                        data-url="{{ url_for('eliminar_factura', id=factura.id) }}"
+                                        data-nombre="esta factura"
+                                        style="padding: 6px 12px; font-size: 0.75rem;">
+                                    Eliminar
+                                </button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+            <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">receipt_long</i>
+            <h3>No hay facturas registradas</h3>
+            {% if modo_edicion %}
+                <p>Empieza registrando la primera factura.</p>
+            {% else %}
+                <p>Activa el modo edición para registrar facturas.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

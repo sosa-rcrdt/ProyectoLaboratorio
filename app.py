@@ -76,6 +76,15 @@ PROFESORES = {
     }
 }
 
+PRESUPUESTOS_FACTURA = [
+    "Secihti",
+    "POA",
+    "Fondo Fijo",
+    "VIEP",
+    "PROME",
+    "PFCE-PIFI"
+]
+
 
 def archivos_con_nombre(lista_archivos):
     return [archivo for archivo in lista_archivos if archivo and archivo.filename]
@@ -233,6 +242,63 @@ def guardar_pdfs_de_material(material, pdfs):
                 archivo=ruta_pdf
             )
             db.session.add(material_pdf)
+
+def obtener_datos_factura_formulario():
+    return {
+        "doctor_responsable": request.form.get("doctor_responsable", "").strip(),
+        "presupuesto": request.form.get("presupuesto", "").strip(),
+        "fecha_factura": request.form.get("fecha_factura", "").strip(),
+        "descripcion": request.form.get("descripcion", "").strip(),
+    }
+
+
+def convertir_fecha_factura(fecha_texto):
+    if not fecha_texto:
+        return None
+
+    try:
+        return datetime.strptime(fecha_texto, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def validar_pdf_factura(pdf, obligatorio=False):
+    if obligatorio and (not pdf or not pdf.filename):
+        return "Debes subir el PDF de la factura."
+
+    if not pdf or not pdf.filename:
+        return None
+
+    filename = secure_filename(pdf.filename)
+
+    if not extension_permitida(filename, app.config["EXTENSIONES_PDFS"]):
+        return "Solo se permiten archivos PDF."
+
+    return None
+
+
+def validar_factura(datos, presupuestos_validos, pdf=None, pdf_obligatorio=False):
+    if not datos["doctor_responsable"]:
+        return "Debes seleccionar un profesor responsable."
+
+    if datos["doctor_responsable"] not in PROFESORES:
+        return "El profesor seleccionado no es válido."
+
+    if not datos["presupuesto"]:
+        return "Debes seleccionar de qué presupuesto sale la factura."
+
+    if datos["presupuesto"] not in presupuestos_validos:
+        return "El presupuesto seleccionado no es válido."
+
+    if datos["fecha_factura"] and not convertir_fecha_factura(datos["fecha_factura"]):
+        return "La fecha de la factura no es válida."
+
+    error_pdf = validar_pdf_factura(pdf, obligatorio=pdf_obligatorio)
+    if error_pdf:
+        return error_pdf
+
+    return None
+
 
 def guardar_pdf_factura(pdf):
     return guardar_archivo(
@@ -576,30 +642,237 @@ def eliminar_material(id):
     flash("Material eliminado correctamente.", "success")
     return redirect(url_for("listar_materiales"))
 
-# PLACEHOLDERS DE FACTURAS
+# LISTAR FACTURAS
 @app.route("/facturas")
 def listar_facturas():
-    flash("Sección de facturas en construcción.", "info")
-    return redirect(url_for("menu"))
+    facturas = Factura.query.order_by(Factura.id.desc()).all()
+    total_facturas = Factura.query.count()
+
+    return render_template(
+        "facturas/lista.html",
+        facturas=facturas,
+        total_facturas=total_facturas
+    )
 
 
-@app.route("/facturas/buscar", methods=["GET", "POST"])
-def buscar_factura():
-    flash("Búsqueda de facturas en construcción.", "info")
-    return redirect(url_for("menu"))
-
-
-@app.route("/facturas/profesor", methods=["GET", "POST"])
-def facturas_por_profesor():
-    flash("Filtro de facturas por profesor en construcción.", "info")
-    return redirect(url_for("menu"))
-
-
+# CREAR FACTURA
 @app.route("/facturas/crear", methods=["GET", "POST"])
 @requiere_modo_edicion
 def crear_factura():
-    flash("Registro de facturas en construcción.", "info")
-    return redirect(url_for("menu"))
+    error = None
+    datos = {}
+
+    if request.method == "POST":
+        datos = obtener_datos_factura_formulario()
+        pdf = request.files.get("archivo_pdf")
+
+        error = validar_factura(
+            datos,
+            PRESUPUESTOS_FACTURA,
+            pdf=pdf,
+            pdf_obligatorio=True
+        )
+
+        if error:
+            return render_template(
+                "facturas/crear.html",
+                error=error,
+                datos=datos,
+                profesores=PROFESORES,
+                presupuestos=PRESUPUESTOS_FACTURA
+            )
+
+        datos_profesor = PROFESORES.get(datos["doctor_responsable"])
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
+        ruta_pdf = guardar_pdf_factura(pdf)
+
+        nueva_factura = Factura(
+            doctor_responsable=datos["doctor_responsable"],
+            puesto_responsable=puesto_responsable,
+            area_responsable=area_responsable,
+            presupuesto=datos["presupuesto"],
+            fecha_factura=convertir_fecha_factura(datos["fecha_factura"]),
+            descripcion=datos["descripcion"],
+            archivo_pdf=ruta_pdf
+        )
+
+        db.session.add(nueva_factura)
+        db.session.commit()
+
+        flash("Factura registrada correctamente.", "success")
+        return redirect(url_for("listar_facturas"))
+
+    return render_template(
+        "facturas/crear.html",
+        error=error,
+        datos=datos,
+        profesores=PROFESORES,
+        presupuestos=PRESUPUESTOS_FACTURA
+    )
+
+
+# BUSCAR FACTURA
+@app.route("/facturas/buscar", methods=["GET", "POST"])
+def buscar_factura():
+    resultados = []
+    busqueda = ""
+    error = None
+
+    if request.method == "POST":
+        busqueda = request.form.get("busqueda", "").strip()
+
+        if not busqueda:
+            error = "Debes escribir algo para buscar."
+        else:
+            filtros = [
+                Factura.presupuesto.ilike(f"%{busqueda}%"),
+                Factura.descripcion.ilike(f"%{busqueda}%")
+            ]
+
+            fecha_buscada = convertir_fecha_factura(busqueda)
+
+            if fecha_buscada:
+                filtros.append(Factura.fecha_factura == fecha_buscada)
+
+            condicion = filtros[0] | filtros[1]
+
+            if len(filtros) > 2:
+                condicion = condicion | filtros[2]
+
+            resultados = Factura.query.filter(condicion).order_by(Factura.id.desc()).all()
+
+    return render_template(
+        "facturas/buscar.html",
+        resultados=resultados,
+        busqueda=busqueda,
+        error=error
+    )
+
+
+# VER FACTURAS POR PROFESOR
+@app.route("/facturas/profesor", methods=["GET", "POST"])
+def facturas_por_profesor():
+    resultados = []
+    profesor_buscado = ""
+    error = None
+
+    if request.method == "POST":
+        profesor_buscado = request.form.get("doctor_responsable", "").strip()
+
+        if not profesor_buscado:
+            error = "Debes seleccionar un profesor."
+        elif profesor_buscado not in PROFESORES:
+            error = "El profesor seleccionado no es válido."
+        else:
+            resultados = Factura.query.filter_by(
+                doctor_responsable=profesor_buscado
+            ).order_by(Factura.id.desc()).all()
+
+    return render_template(
+        "facturas/profesor.html",
+        resultados=resultados,
+        profesor_buscado=profesor_buscado,
+        profesores=PROFESORES,
+        error=error
+    )
+
+
+# EDITAR FACTURA
+@app.route("/facturas/editar/<int:id>", methods=["GET", "POST"])
+@requiere_modo_edicion
+def editar_factura(id):
+    factura = Factura.query.get_or_404(id)
+    error = None
+    datos = {}
+
+    if request.method == "POST":
+        datos = obtener_datos_factura_formulario()
+        pdf = request.files.get("archivo_pdf")
+
+        error = validar_factura(
+            datos,
+            PRESUPUESTOS_FACTURA,
+            pdf=pdf,
+            pdf_obligatorio=False
+        )
+
+        if error:
+            return render_template(
+                "facturas/editar.html",
+                factura=factura,
+                error=error,
+                datos=datos,
+                profesores=PROFESORES,
+                presupuestos=PRESUPUESTOS_FACTURA
+            )
+
+        datos_profesor = PROFESORES.get(datos["doctor_responsable"])
+        puesto_responsable = datos_profesor["puesto"] if datos_profesor else ""
+        area_responsable = datos_profesor["area"] if datos_profesor else ""
+
+        factura.doctor_responsable = datos["doctor_responsable"]
+        factura.puesto_responsable = puesto_responsable
+        factura.area_responsable = area_responsable
+        factura.presupuesto = datos["presupuesto"]
+        factura.fecha_factura = convertir_fecha_factura(datos["fecha_factura"])
+        factura.descripcion = datos["descripcion"]
+
+        if pdf and pdf.filename:
+            ruta_pdf_anterior = factura.archivo_pdf
+            ruta_pdf_nueva = guardar_pdf_factura(pdf)
+
+            if ruta_pdf_nueva:
+                factura.archivo_pdf = ruta_pdf_nueva
+                eliminar_archivo_local(ruta_pdf_anterior)
+
+        db.session.commit()
+
+        flash("Factura actualizada correctamente.", "success")
+        return redirect(url_for("listar_facturas"))
+
+    return render_template(
+        "facturas/editar.html",
+        factura=factura,
+        error=error,
+        datos=datos,
+        profesores=PROFESORES,
+        presupuestos=PRESUPUESTOS_FACTURA
+    )
+
+
+# ELIMINAR PDF DE FACTURA
+@app.route("/facturas/pdf/eliminar/<int:id>", methods=["POST"])
+@requiere_modo_edicion
+def eliminar_pdf_factura(id):
+    factura = Factura.query.get_or_404(id)
+
+    if factura.archivo_pdf:
+        eliminar_archivo_local(factura.archivo_pdf)
+        factura.archivo_pdf = None
+        db.session.commit()
+        flash("PDF de factura eliminado correctamente.", "success")
+    else:
+        flash("La factura no tiene PDF registrado.", "error")
+
+    return redirect(url_for("editar_factura", id=factura.id))
+
+
+# ELIMINAR FACTURA
+@app.route("/facturas/eliminar/<int:id>", methods=["POST"])
+@requiere_modo_edicion
+def eliminar_factura(id):
+    factura = Factura.query.get_or_404(id)
+
+    if factura.archivo_pdf:
+        eliminar_archivo_local(factura.archivo_pdf)
+
+    db.session.delete(factura)
+    db.session.commit()
+
+    flash("Factura eliminada correctamente.", "success")
+    return redirect(url_for("listar_facturas"))
 
 
 with app.app_context():

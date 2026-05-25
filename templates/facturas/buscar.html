@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Búsqueda de Facturas{% endblock %}
+
+{% block content %}
+
+<style>
+    #formBuscarFactura .campo-error:empty {
+        display: none;
+    }
+</style>
+
+<h1 class="page-title">Búsqueda de Facturas</h1>
+<p class="page-subtitle">Localiza facturas por presupuesto, fecha o descripción.</p>
+
+<div class="card" style="padding: 24px; background: var(--surface);">
+    <form method="POST" id="formBuscarFactura" novalidate style="display: flex; gap: 16px; align-items: flex-start;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label for="busqueda_factura" class="form-label" style="display:none;">Buscar factura:</label>
+
+            <div style="position: relative;">
+                <i class="material-symbols-rounded"
+                   style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">
+                    search
+                </i>
+
+                <input type="text"
+                       class="form-control {% if error %}input-error{% endif %}"
+                       id="busqueda_factura"
+                       name="busqueda"
+                       value="{{ busqueda }}"
+                       placeholder="Buscar por presupuesto, fecha o descripción..."
+                       style="padding-left:48px;">
+            </div>
+
+            <div id="error_busqueda_factura" class="campo-error">
+                {%- if error -%}
+                    {{ error }}
+                {%- endif -%}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+            <i class="material-symbols-rounded">filter_list</i>
+            Buscar
+        </button>
+    </form>
+
+    <div id="erroresBuscarFactura" style="display:none;"></div>
+</div>
+
+{% if busqueda %}
+    <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main);">
+        Resultados para: "<span style="color:var(--primary);">{{ busqueda }}</span>"
+    </h3>
+
+    {% if resultados %}
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-wrapper" style="border:none; border-radius: 0; overflow-x: auto;">
+                <table style="min-width: {% if modo_edicion %}1250px{% else %}1100px{% endif %};">
+                    <thead>
+                        <tr>
+                            <th>Doctor Responsable</th>
+                            <th>Presupuesto</th>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Archivo</th>
+                            {% if modo_edicion %}
+                                <th style="text-align: right;">Acciones</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for factura in resultados %}
+                        <tr>
+                            <td style="min-width: 220px; white-space: normal;">
+                                <div style="font-weight: 700;">{{ factura.doctor_responsable or '—' }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                    {{ factura.puesto_responsable or '—' }} · {{ factura.area_responsable or '—' }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--primary);">
+                                    {{ factura.presupuesto or '—' }}
+                                </span>
+                            </td>
+
+                            <td>{{ factura.fecha_factura.strftime('%d/%m/%Y') if factura.fecha_factura else '—' }}</td>
+
+                            <td style="max-width: 320px;">
+                                <div title="{{ factura.descripcion or '' }}"
+                                     style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ factura.descripcion or '—' }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if factura.archivo_pdf %}
+                                    <button type="button"
+                                            class="btn btn-secondary btn-modal"
+                                            style="padding: 6px 10px; font-size: 0.75rem;"
+                                            data-tipo="pdfs"
+                                            data-titulo="Factura: {{ factura.doctor_responsable or 'Sin responsable' }}"
+                                            data-archivos='{{ [factura.archivo_pdf]|tojson }}'
+                                            title="Ver PDF">
+                                        <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                        Ver PDF
+                                    </button>
+                                {% else %}
+                                    <button disabled
+                                            class="btn"
+                                            style="padding: 6px; font-size: 0.75rem; background: var(--bg-color); color: var(--neutral-light); cursor: not-allowed;"
+                                            title="Sin PDF">
+                                        <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
+                                    </button>
+                                {% endif %}
+                            </td>
+
+                            {% if modo_edicion %}
+                                <td style="text-align: right;">
+                                    <a href="{{ url_for('editar_factura', id=factura.id) }}"
+                                       class="btn btn-secondary"
+                                       style="padding: 6px 12px; font-size: 0.75rem;">
+                                        Editar
+                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-danger btn-eliminar"
+                                            data-url="{{ url_for('eliminar_factura', id=factura.id) }}"
+                                            data-nombre="esta factura"
+                                            style="padding: 6px 12px; font-size: 0.75rem;">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div style="padding: 40px; text-align: center; color: var(--text-muted); background:var(--surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg);">
+            <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">search_off</i>
+            <h3>No se encontraron resultados</h3>
+            <p>No pudimos localizar ninguna factura asociada a tu búsqueda.</p>
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if not busqueda %}
+<div style="display: flex; justify-content: center; align-items: flex-end; margin-top: 5px; flex-grow: 1;">
+    <img src="{{ url_for('static', filename='css/dibujolab.png') }}"
+         alt="Ilustración Laboratorio"
+         style="max-width: 350px; width: 100%; height: auto; opacity: 0.35; margin-bottom: 20px;">
+</div>
+{% endif %}
+
+{% endblock %}
