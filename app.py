@@ -5,7 +5,7 @@ from uuid import uuid4
 import os
 
 from config import Config
-from models import db, Material, MaterialFoto, MaterialPDF
+from models import db, Material, MaterialFoto, MaterialPDF, Factura
 from functools import wraps
 
 
@@ -18,6 +18,7 @@ db.init_app(app)
 # Crear carpetas de uploads si no existen
 os.makedirs(app.config["UPLOAD_FOLDER_FOTOS"], exist_ok=True)
 os.makedirs(app.config["UPLOAD_FOLDER_PDFS"], exist_ok=True)
+os.makedirs(app.config["UPLOAD_FOLDER_FACTURAS"], exist_ok=True)
 
 def modo_edicion_activo():
     return session.get("modo_edicion") is True
@@ -109,6 +110,16 @@ def validar_archivos(fotos, pdfs, fotos_actuales=0, pdfs_actuales=0):
 
     return None
 
+def validar_pdf_factura(pdf):
+    if not pdf or not pdf.filename:
+        return None
+
+    filename = secure_filename(pdf.filename)
+
+    if not extension_permitida(filename, app.config["EXTENSIONES_PDFS"]):
+        return "Solo se permiten archivos PDF."
+
+    return None
 
 def guardar_archivo(archivo, carpeta_config, ruta_relativa):
     if not archivo or not archivo.filename:
@@ -222,6 +233,13 @@ def guardar_pdfs_de_material(material, pdfs):
                 archivo=ruta_pdf
             )
             db.session.add(material_pdf)
+
+def guardar_pdf_factura(pdf):
+    return guardar_archivo(
+        pdf,
+        "UPLOAD_FOLDER_FACTURAS",
+        "uploads/facturas"
+    )
 
 @app.route("/autenticarse", methods=["POST"])
 def autenticarse():

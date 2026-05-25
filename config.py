@@ -14,6 +14,7 @@ class Config:
 
     UPLOAD_FOLDER_FOTOS = os.path.join(BASE_DIR, "static", "uploads", "fotos")
     UPLOAD_FOLDER_PDFS = os.path.join(BASE_DIR, "static", "uploads", "pdfs")
+    UPLOAD_FOLDER_FACTURAS = os.path.join(BASE_DIR, "static", "uploads", "facturas")
 
     MAX_ARCHIVOS_POR_TIPO = 5
 
