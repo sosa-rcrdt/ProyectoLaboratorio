@@ -23,12 +23,26 @@ def modo_edicion_activo():
     return session.get("modo_edicion") is True
 
 
+def ruta_local_segura(ruta):
+    if not ruta:
+        return False
+
+    if not ruta.startswith("/"):
+        return False
+
+    if ruta.startswith("//"):
+        return False
+
+    return True
+
+
 def requiere_modo_edicion(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not modo_edicion_activo():
+            session["next_modo_edicion"] = request.path
             flash("Debes autenticarte para modificar materiales.", "error")
-            return redirect(url_for("autenticarse", next=request.path))
+            return redirect(url_for("menu"))
 
         return func(*args, **kwargs)
 
@@ -130,7 +144,7 @@ def eliminar_archivo_local(ruta_relativa):
 
 
 def obtener_datos_material_formulario():
-    inventariado = request.form.get("inventariado", "No Inventariado").strip()
+    inventariado = request.form.get("inventariado", "").strip()
     no_inventario = request.form.get("no_inventario", "").strip()
 
     if inventariado == "No Inventariado":
@@ -153,14 +167,20 @@ def obtener_datos_material_formulario():
 
 
 def validar_material(datos, estados_validos, inventariado_validos, current_year):
-    if not datos["nombre_material"]:
-        return "El nombre del material es obligatorio."
+    if datos["inventariado"] and datos["inventariado"] not in inventariado_validos:
+        return "El valor de inventariado no es válido."
 
-    if datos["inventariado"] not in inventariado_validos:
-        return "Debes seleccionar si el material está inventariado o no."
+    if not datos["doctor_responsable"]:
+        return "Debes seleccionar un profesor responsable."
 
-    if datos["inventariado"] == "Inventariado" and not datos["no_inventario"]:
-        return "El número de inventario es obligatorio cuando el material está inventariado."
+    if datos["doctor_responsable"] not in PROFESORES:
+        return "El profesor seleccionado no es válido."
+
+    if not datos["estado_prestamo"]:
+        return "Debes seleccionar un estado."
+
+    if datos["estado_prestamo"] not in estados_validos:
+        return "El estado seleccionado no es válido."
 
     if datos["anio"]:
         if not datos["anio"].isdigit():
@@ -168,9 +188,6 @@ def validar_material(datos, estados_validos, inventariado_validos, current_year)
 
         if int(datos["anio"]) > current_year:
             return "El año no puede ser mayor al actual."
-
-    if datos["estado_prestamo"] not in estados_validos:
-        return "El estado seleccionado no es válido."
 
     return None
 
@@ -208,19 +225,26 @@ def guardar_pdfs_de_material(material, pdfs):
 
 @app.route("/autenticarse", methods=["POST"])
 def autenticarse():
-    siguiente = request.form.get("next") or request.referrer or url_for("menu")
+    siguiente_pendiente = session.get("next_modo_edicion")
+    siguiente_formulario = request.form.get("next")
+    siguiente = siguiente_pendiente or siguiente_formulario or request.referrer or url_for("menu")
 
-    if not siguiente.startswith("/"):
+    if not ruta_local_segura(siguiente):
         siguiente = url_for("menu")
 
     password = request.form.get("password", "")
 
     if password == app.config["EDIT_PASSWORD"]:
         session["modo_edicion"] = True
+        session.pop("next_modo_edicion", None)
         flash("Modo edición activado correctamente.", "success")
         return redirect(siguiente)
 
     flash("Contraseña incorrecta.", "error")
+
+    if siguiente_pendiente:
+        return redirect(url_for("menu"))
+
     return redirect(siguiente)
 
 

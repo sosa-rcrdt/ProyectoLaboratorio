@@ -16,7 +16,7 @@
     {% endif %}
 
     <div class="card">
-        <form method="POST" id="formCrearMaterial" enctype="multipart/form-data" novalidate>
+        <form id="formCrearMaterial" method="POST" enctype="multipart/form-data" novalidate>
             <div id="erroresCrear" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
 
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
@@ -26,7 +26,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
                     <label for="nombre_material" class="form-label">Nombre del Material</label>
-                    <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', '') }}" placeholder="Ej. Multímetro Fluke" required>
+                    <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', '') }}" placeholder="Ej. Multímetro Fluke">
                 </div>
 
                 <div class="form-group">
@@ -57,7 +57,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
                     <label for="inventariado" class="form-label">Inventariado</label>
-                    <select class="form-control" id="inventariado" name="inventariado" required>
+                    <select class="form-control" id="inventariado" name="inventariado">
                         <option value="">Selecciona una opción</option>
                         {% for opcion in inventariado_validos %}
                             <option value="{{ opcion }}" {% if datos.get('inventariado', 'No Inventariado') == opcion %}selected{% endif %}>
@@ -98,6 +98,7 @@
                             </option>
                         {% endfor %}
                     </select>
+                    <div id="error_doctor_responsable" class="campo-error"></div>
                 </div>
 
                 <div class="form-group">
@@ -107,7 +108,7 @@
 
                 <div class="form-group">
                     <label for="estado_prestamo" class="form-label">Estado</label>
-                    <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
+                    <select class="form-control" id="estado_prestamo" name="estado_prestamo">
                         <option value="">Selecciona el estado</option>
                         {% for estado in estados_validos %}
                             <option value="{{ estado }}" {% if datos.get('estado_prestamo', '') == estado %}selected{% endif %}>
@@ -115,6 +116,7 @@
                             </option>
                         {% endfor %}
                     </select>
+                    <div id="error_estado_prestamo" class="campo-error"></div>
                 </div>
             </div>
 

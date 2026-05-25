@@ -9,14 +9,14 @@ class Material(db.Model):
     numero_serie = db.Column(db.String(100), nullable=True)
     no_fabricante = db.Column(db.String(100), nullable=True)
 
-    nombre_material = db.Column(db.String(150), nullable=False)
+    nombre_material = db.Column(db.String(150), nullable=True)
     marca = db.Column(db.String(100), nullable=True)
     anio = db.Column(db.Integer, nullable=True)
 
     descripcion = db.Column(db.Text, nullable=True)
     software = db.Column(db.String(150), nullable=True)
 
-    inventariado = db.Column(db.String(30), nullable=False, default="No Inventariado")
+    inventariado = db.Column(db.String(30), nullable=True, default="No Inventariado")
     no_inventario = db.Column(db.String(100), nullable=True)
 
     doctor_responsable = db.Column(db.String(150), nullable=True)
@@ -24,7 +24,7 @@ class Material(db.Model):
     area_responsable = db.Column(db.String(150), nullable=True)
 
     ubicacion = db.Column(db.String(150), nullable=True)
-    estado_prestamo = db.Column(db.String(50), nullable=False)
+    estado_prestamo = db.Column(db.String(50), nullable=True)
 
     fotos = db.relationship(
         "MaterialFoto",
@@ -41,7 +41,7 @@ class Material(db.Model):
     )
 
     def __repr__(self):
-        return f"<Material {self.nombre_material}>"
+        return f"<Material {self.nombre_material or 'Sin nombre'}>"
 
 
 class MaterialFoto(db.Model):

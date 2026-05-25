@@ -218,6 +218,20 @@ document.addEventListener("DOMContentLoaded", function () {
     inicializarSelectorArchivos("fotos");
     inicializarSelectorArchivos("pdfs");
 
+    ["doctor_responsable", "estado_prestamo", "busqueda"].forEach((campoId) => {
+        const campo = document.getElementById(campoId);
+
+        if (campo) {
+            campo.addEventListener("input", function () {
+                limpiarErrorCampo(campoId);
+            });
+
+            campo.addEventListener("change", function () {
+                limpiarErrorCampo(campoId);
+            });
+        }
+    });
+
     // ===== VALIDACIÓN CREAR =====
     const formCrear = document.getElementById("formCrearMaterial");
     const erroresCrear = document.getElementById("erroresCrear");
@@ -225,22 +239,52 @@ document.addEventListener("DOMContentLoaded", function () {
     if (formCrear) {
         formCrear.addEventListener("submit", function (event) {
             const errores = [];
+            const erroresCampos = {};
+            limpiarErroresCamposMaterial();
 
             const errorBackendCrear = document.getElementById("errorBackendCrear");
             if (errorBackendCrear) {
                 errorBackendCrear.style.display = "none";
             }
 
-            validarCamposMaterial(errores);
+            validarReglasMaterialBloqueantes(errores, erroresCampos);
             validarLimiteArchivos("fotos", errores, "fotos");
             validarLimiteArchivos("pdfs", errores, "PDFs");
+            validarExtensionesArchivos(
+                "fotos",
+                errores,
+                ["png", "jpg", "jpeg", "gif", "webp"],
+                "Solo se permiten imágenes con extensión: png, jpg, jpeg, gif o webp."
+            );
+            validarExtensionesArchivos(
+                "pdfs",
+                errores,
+                ["pdf"],
+                "Solo se permiten archivos PDF."
+            );
 
-            if (errores.length > 0) {
+            if (errores.length > 0 || hayErroresCampos(erroresCampos)) {
                 event.preventDefault();
                 mostrarErrores(erroresCrear, errores);
-            } else {
-                limpiarErrores(erroresCrear);
+                mostrarErroresCamposMaterial(erroresCampos);
+                return;
             }
+
+            const camposVacios = obtenerCamposVaciosMaterial();
+
+            if (camposVacios.length > 0 && formCrear.dataset.confirmadoCamposVacios !== "true") {
+                event.preventDefault();
+                limpiarErrores(erroresCrear);
+
+                mostrarModalCamposVacios(camposVacios, function () {
+                    formCrear.dataset.confirmadoCamposVacios = "true";
+                    formCrear.submit();
+                });
+
+                return;
+            }
+
+            limpiarErrores(erroresCrear);
         });
     }
 
@@ -251,22 +295,52 @@ document.addEventListener("DOMContentLoaded", function () {
     if (formEditar) {
         formEditar.addEventListener("submit", function (event) {
             const errores = [];
+            const erroresCampos = {};
+            limpiarErroresCamposMaterial();
 
             const errorBackendEditar = document.getElementById("errorBackendEditar");
             if (errorBackendEditar) {
                 errorBackendEditar.style.display = "none";
             }
 
-            validarCamposMaterial(errores);
+            validarReglasMaterialBloqueantes(errores, erroresCampos);
             validarLimiteArchivos("fotos", errores, "fotos");
             validarLimiteArchivos("pdfs", errores, "PDFs");
+            validarExtensionesArchivos(
+                "fotos",
+                errores,
+                ["png", "jpg", "jpeg", "gif", "webp"],
+                "Solo se permiten imágenes con extensión: png, jpg, jpeg, gif o webp."
+            );
+            validarExtensionesArchivos(
+                "pdfs",
+                errores,
+                ["pdf"],
+                "Solo se permiten archivos PDF."
+            );
 
-            if (errores.length > 0) {
+            if (errores.length > 0 || hayErroresCampos(erroresCampos)) {
                 event.preventDefault();
                 mostrarErrores(erroresEditar, errores);
-            } else {
-                limpiarErrores(erroresEditar);
+                mostrarErroresCamposMaterial(erroresCampos);
+                return;
             }
+
+            const camposVacios = obtenerCamposVaciosMaterial();
+
+            if (camposVacios.length > 0 && formEditar.dataset.confirmadoCamposVacios !== "true") {
+                event.preventDefault();
+                limpiarErrores(erroresEditar);
+
+                mostrarModalCamposVacios(camposVacios, function () {
+                    formEditar.dataset.confirmadoCamposVacios = "true";
+                    formEditar.submit();
+                });
+
+                return;
+            }
+
+            limpiarErrores(erroresEditar);
         });
     }
 
@@ -276,18 +350,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (formBuscar) {
         formBuscar.addEventListener("submit", function (event) {
-            const errores = [];
-            const busqueda = formBuscar.querySelector('input[name="busqueda"]')?.value || "";
+            const erroresCampos = {};
+            const busqueda = document.getElementById("busqueda")?.value || "";
+
+            limpiarErrores(erroresBuscar);
+            limpiarErrorCampo("busqueda");
 
             if (esVacio(busqueda)) {
-                errores.push("Debes escribir algo para buscar.");
+                agregarErrorCampo(
+                    erroresCampos,
+                    "busqueda",
+                    "Debes escribir algo para buscar."
+                );
             }
 
-            if (errores.length > 0) {
+            if (hayErroresCampos(erroresCampos)) {
                 event.preventDefault();
-                mostrarErrores(erroresBuscar, errores);
-            } else {
-                limpiarErrores(erroresBuscar);
+                mostrarErroresCamposMaterial(erroresCampos);
             }
         });
     }
@@ -298,18 +377,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (formProfesor) {
         formProfesor.addEventListener("submit", function (event) {
-            const errores = [];
+            const erroresCampos = {};
             const profesor = document.getElementById("doctor_responsable")?.value || "";
 
+            limpiarErrores(erroresProfesor);
+            limpiarErrorCampo("doctor_responsable");
+
             if (esVacio(profesor)) {
-                errores.push("Debes seleccionar o escribir un profesor.");
+                agregarErrorCampo(
+                    erroresCampos,
+                    "doctor_responsable",
+                    "Debes seleccionar un profesor."
+                );
             }
 
-            if (errores.length > 0) {
+            if (hayErroresCampos(erroresCampos)) {
                 event.preventDefault();
-                mostrarErrores(erroresProfesor, errores);
-            } else {
-                limpiarErrores(erroresProfesor);
+                mostrarErroresCamposMaterial(erroresCampos);
             }
         });
     }
@@ -325,7 +409,7 @@ function configurarCampoInventario() {
     function actualizarEstado() {
         if (inventariado.value === "Inventariado") {
             numeroInventario.disabled = false;
-            numeroInventario.required = true;
+            numeroInventario.required = false;
             numeroInventario.placeholder = "Escribe el número de inventario";
         } else {
             numeroInventario.value = "";
@@ -549,57 +633,174 @@ function mostrarErrores(contenedor, errores) {
     contenedor.innerHTML = html;
 }
 
+function agregarErrorCampo(erroresCampos, campo, mensaje) {
+    if (!erroresCampos[campo]) {
+        erroresCampos[campo] = [];
+    }
+
+    erroresCampos[campo].push(mensaje);
+}
+
+
+function hayErroresCampos(erroresCampos) {
+    return Object.values(erroresCampos).some((errores) => errores.length > 0);
+}
+
+
+function limpiarErrorCampo(campo) {
+    const contenedor = document.getElementById(`error_${campo}`);
+    const input = document.getElementById(campo);
+
+    if (contenedor) {
+        contenedor.innerHTML = "";
+    }
+
+    if (input) {
+        input.classList.remove("input-error");
+    }
+}
+
+
+function limpiarErroresCamposMaterial() {
+    limpiarErrorCampo("doctor_responsable");
+    limpiarErrorCampo("estado_prestamo");
+}
+
+
+function mostrarErroresCamposMaterial(erroresCampos) {
+    Object.keys(erroresCampos).forEach((campo) => {
+        const contenedor = document.getElementById(`error_${campo}`);
+        const input = document.getElementById(campo);
+
+        if (!contenedor) return;
+
+        contenedor.innerHTML = erroresCampos[campo]
+            .map((mensaje) => `<div>${mensaje}</div>`)
+            .join("");
+
+        if (input) {
+            input.classList.add("input-error");
+        }
+    });
+}
+
 function esVacio(valor) {
     return !valor || valor.trim() === "";
 }
 
-function validarCamposMaterial(errores) {
-    const nombreMaterial = document.getElementById("nombre_material")?.value || "";
-    const marca = document.getElementById("marca")?.value || "";
+function validarReglasMaterialBloqueantes(errores, erroresCampos = {}) {
     const inventariado = document.getElementById("inventariado")?.value || "";
-    const numeroInventario = document.getElementById("numero_inventario")?.value || "";
     const doctorResponsable = document.getElementById("doctor_responsable")?.value || "";
     const anio = document.getElementById("anio")?.value || "";
-    const ubicacion = document.getElementById("ubicacion")?.value || "";
     const estadoPrestamo = document.getElementById("estado_prestamo")?.value || "";
 
-    if (esVacio(nombreMaterial)) {
-        errores.push("El nombre del material es obligatorio.");
-    }
+    const inventariadoValidos = ["Inventariado", "No Inventariado"];
+    const estadosValidos = [
+        "Disponible",
+        "En préstamo",
+        "Fuera de servicio",
+        "En mantenimiento"
+    ];
 
-    if (esVacio(marca)) {
-        errores.push("La marca es obligatoria.");
-    }
-
-    if (esVacio(inventariado)) {
-        errores.push("Debes seleccionar si el material está inventariado o no.");
-    }
-
-    if (inventariado === "Inventariado" && esVacio(numeroInventario)) {
-        errores.push("El número de inventario es obligatorio cuando el material está inventariado.");
+    if (!esVacio(inventariado) && !inventariadoValidos.includes(inventariado)) {
+        errores.push("El valor de inventariado no es válido.");
     }
 
     if (esVacio(doctorResponsable)) {
-        errores.push("El profesor responsable es obligatorio.");
-    }
-
-    if (esVacio(anio)) {
-        errores.push("El año es obligatorio.");
-    }
-
-    const anioActual = new Date().getFullYear();
-
-    if (!esVacio(anio) && parseInt(anio) > anioActual) {
-        errores.push("El año no puede ser mayor al actual.");
-    }
-
-    if (esVacio(ubicacion)) {
-        errores.push("La ubicación es obligatoria.");
+        agregarErrorCampo(
+            erroresCampos,
+            "doctor_responsable",
+            "Debes seleccionar un profesor responsable."
+        );
     }
 
     if (esVacio(estadoPrestamo)) {
-        errores.push("Debes seleccionar un estado.");
+        agregarErrorCampo(
+            erroresCampos,
+            "estado_prestamo",
+            "Debes seleccionar un estado."
+        );
+    } else if (!estadosValidos.includes(estadoPrestamo)) {
+        agregarErrorCampo(
+            erroresCampos,
+            "estado_prestamo",
+            "El estado seleccionado no es válido."
+        );
     }
+
+    if (!esVacio(anio)) {
+        if (!/^\d+$/.test(anio.trim())) {
+            errores.push("El año debe ser un número entero.");
+        } else {
+            const anioActual = new Date().getFullYear();
+
+            if (parseInt(anio, 10) > anioActual) {
+                errores.push("El año no puede ser mayor al actual.");
+            }
+        }
+    }
+}
+
+function obtenerCamposVaciosMaterial() {
+    const campos = [
+        {
+            id: "nombre_material",
+            etiqueta: "Nombre del material"
+        },
+        {
+            id: "numero_serie",
+            etiqueta: "Número de serie"
+        },
+        {
+            id: "no_fabricante",
+            etiqueta: "No. fabricante"
+        },
+        {
+            id: "marca",
+            etiqueta: "Marca"
+        },
+        {
+            id: "anio",
+            etiqueta: "Año"
+        },
+        {
+            id: "descripcion",
+            etiqueta: "Descripción"
+        },
+        {
+            id: "software",
+            etiqueta: "Software"
+        },
+        {
+            id: "inventariado",
+            etiqueta: "Inventariado"
+        },
+        {
+            id: "ubicacion",
+            etiqueta: "Ubicación"
+        }
+    ];
+
+    const camposVacios = [];
+
+    campos.forEach((campo) => {
+        const elemento = document.getElementById(campo.id);
+
+        if (!elemento) return;
+
+        if (esVacio(elemento.value || "")) {
+            camposVacios.push(campo.etiqueta);
+        }
+    });
+
+    const inventariado = document.getElementById("inventariado")?.value || "";
+    const numeroInventario = document.getElementById("numero_inventario")?.value || "";
+
+    if (inventariado === "Inventariado" && esVacio(numeroInventario)) {
+        camposVacios.push("Número de inventario");
+    }
+
+    return camposVacios;
 }
 
 function validarLimiteArchivos(inputId, errores, etiqueta) {
@@ -614,4 +815,163 @@ function validarLimiteArchivos(inputId, errores, etiqueta) {
     if (archivosActuales + archivosNuevos > maxArchivos) {
         errores.push(`Solo puedes tener máximo ${maxArchivos} ${etiqueta} por material.`);
     }
+}
+
+function validarExtensionesArchivos(inputId, errores, extensionesPermitidas, mensajeError) {
+    const input = document.getElementById(inputId);
+
+    if (!input || !input.files) return;
+
+    Array.from(input.files).forEach((archivo) => {
+        const nombre = archivo.name || "";
+
+        if (!nombre.includes(".")) {
+            if (!errores.includes(mensajeError)) {
+                errores.push(mensajeError);
+            }
+            return;
+        }
+
+        const extension = nombre.split(".").pop().toLowerCase();
+
+        if (!extensionesPermitidas.includes(extension)) {
+            if (!errores.includes(mensajeError)) {
+                errores.push(mensajeError);
+            }
+        }
+    });
+}
+
+function obtenerOCrearModalCamposVacios() {
+    let modal = document.getElementById("modalCamposVacios");
+
+    if (modal) return modal;
+
+    modal = document.createElement("div");
+    modal.id = "modalCamposVacios";
+    modal.style.display = "none";
+    modal.style.position = "fixed";
+    modal.style.inset = "0";
+    modal.style.background = "rgba(15, 23, 42, 0.55)";
+    modal.style.zIndex = "9999";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
+    modal.style.padding = "20px";
+
+    modal.innerHTML = `
+        <div style="
+            width: min(520px, 100%);
+            background: var(--surface, #ffffff);
+            border-radius: var(--radius-lg, 18px);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+            overflow: hidden;
+            border: 1px solid var(--border-color, #e2e8f0);
+        ">
+            <div style="
+                padding: 20px 22px;
+                border-bottom: 1px solid var(--border-color, #e2e8f0);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            ">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-color, #0f172a);">
+                        Campos incompletos
+                    </h3>
+                    <p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-muted, #64748b);">
+                        El material se guardará con información incompleta.
+                    </p>
+                </div>
+
+                <button type="button" id="cerrarModalCamposVacios" class="btn btn-secondary" style="padding: 6px 10px;">
+                    ✕
+                </button>
+            </div>
+
+            <div style="padding: 20px 22px;">
+                <p style="margin-top: 0; color: var(--text-color, #0f172a);">
+                    Los siguientes campos están vacíos:
+                </p>
+
+                <ul id="listaCamposVacios" style="
+                    margin: 0 0 18px 20px;
+                    color: var(--text-muted, #64748b);
+                    line-height: 1.7;
+                    max-height: 220px;
+                    overflow: auto;
+                "></ul>
+
+                <p style="
+                    margin: 0;
+                    font-size: 0.86rem;
+                    color: var(--text-muted, #64748b);
+                ">
+                    Puedes regresar para completarlos o continuar de todas formas.
+                </p>
+            </div>
+
+            <div style="
+                padding: 16px 22px 20px;
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                border-top: 1px solid var(--border-color, #e2e8f0);
+            ">
+                <button type="button" id="cancelarModalCamposVacios" class="btn btn-secondary">
+                    Revisar campos
+                </button>
+
+                <button type="button" id="continuarModalCamposVacios" class="btn btn-primary">
+                    Continuar y guardar
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    return modal;
+}
+
+
+function mostrarModalCamposVacios(camposVacios, alConfirmar) {
+    const modal = obtenerOCrearModalCamposVacios();
+    const lista = document.getElementById("listaCamposVacios");
+    const cerrar = document.getElementById("cerrarModalCamposVacios");
+    const cancelar = document.getElementById("cancelarModalCamposVacios");
+    const continuar = document.getElementById("continuarModalCamposVacios");
+
+    if (!lista || !cerrar || !cancelar || !continuar) return;
+
+    lista.innerHTML = "";
+
+    camposVacios.forEach((campo) => {
+        const item = document.createElement("li");
+        item.textContent = campo;
+        lista.appendChild(item);
+    });
+
+    function cerrarModal() {
+        modal.style.display = "none";
+    }
+
+    cerrar.onclick = cerrarModal;
+    cancelar.onclick = cerrarModal;
+
+    continuar.onclick = function () {
+        modal.style.display = "none";
+
+        if (typeof alConfirmar === "function") {
+            alConfirmar();
+        }
+    };
+
+    modal.onclick = function (event) {
+        if (event.target === modal) {
+            cerrarModal();
+        }
+    };
+
+    modal.style.display = "flex";
 }

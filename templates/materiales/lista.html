@@ -56,7 +56,7 @@
                 {% for material in materiales %}
                 <tr>
                     <td>
-                        <div style="font-weight: 700; color: var(--text-main);">{{ material.nombre_material }}</div>
+                        <div style="font-weight: 700; color: var(--text-main);">{{ material.nombre_material or "Sin nombre" }}</div>
                     </td>
 
                     <td style="max-width: 260px;">
@@ -98,7 +98,7 @@
                                         class="btn btn-secondary btn-modal"
                                         style="padding: 6px 8px; font-size: 0.75rem;"
                                         data-tipo="fotos"
-                                        data-titulo="Fotos: {{ material.nombre_material }}"
+                                        data-titulo="Fotos: {{ material.nombre_material or "Sin nombre" }}"
                                         data-archivos='{{ material.fotos|map(attribute="archivo")|list|tojson }}'
                                         title="Ver fotos">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
@@ -115,7 +115,7 @@
                                         class="btn btn-secondary btn-modal"
                                         style="padding: 6px 8px; font-size: 0.75rem;"
                                         data-tipo="pdfs"
-                                        data-titulo="PDFs: {{ material.nombre_material }}"
+                                        data-titulo="PDFs: {{ material.nombre_material or "Sin nombre" }}"
                                         data-archivos='{{ material.pdfs|map(attribute="archivo")|list|tojson }}'
                                         title="Ver PDFs">
                                     <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
@@ -134,7 +134,7 @@
                             <a href="{{ url_for('editar_material', id=material.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
                                 Editar
                             </a>
-                            <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material }}" style="padding: 6px 12px; font-size: 0.75rem;">
+                            <button type="button" class="btn btn-danger btn-eliminar" data-id="{{ material.id }}" data-nombre="{{ material.nombre_material or "Sin nombre" }}" style="padding: 6px 12px; font-size: 0.75rem;">
                                 Eliminar
                             </button>
                         </td>

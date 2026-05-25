@@ -496,3 +496,20 @@ input[type="file"]::file-selector-button:hover {
 .modal-grande .modal-pdf {
   height: 80vh;
 }
+
+.campo-error {
+    color: var(--danger);
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+.input-error {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.campo-error:empty {
+    display: none;
+}

@@ -23,7 +23,7 @@
     {% endif %}
 
     <div class="card">
-        <form method="POST" id="formEditarMaterial" enctype="multipart/form-data" novalidate>
+        <form id="formEditarMaterial" method="POST" enctype="multipart/form-data" novalidate>
             <div id="erroresEditar" style="color:var(--danger); font-size: 0.875rem; margin-bottom: 16px; font-weight: 500;"></div>
 
             <h3 style="margin-bottom: 24px; color: var(--primary); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display:flex; align-items:center; gap:8px;">
@@ -33,7 +33,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
                     <label for="nombre_material" class="form-label">Nombre del Material</label>
-                    <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', material.nombre_material) }}" required>
+                    <input type="text" class="form-control" id="nombre_material" name="nombre_material" value="{{ datos.get('nombre_material', material.nombre_material) }}">
                 </div>
 
                 <div class="form-group">
@@ -64,7 +64,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
                     <label for="inventariado" class="form-label">Inventariado</label>
-                    <select class="form-control" id="inventariado" name="inventariado" required>
+                    <select class="form-control" id="inventariado" name="inventariado">
                         <option value="">Selecciona una opción</option>
                         {% for opcion in inventariado_validos %}
                             <option value="{{ opcion }}" {% if datos.get('inventariado', material.inventariado) == opcion %}selected{% endif %}>
@@ -105,6 +105,7 @@
                             </option>
                         {% endfor %}
                     </select>
+                    <div id="error_doctor_responsable" class="campo-error"></div>
                 </div>
 
                 <div class="form-group">
@@ -114,7 +115,7 @@
 
                 <div class="form-group">
                     <label for="estado_prestamo" class="form-label">Estado</label>
-                    <select class="form-control" id="estado_prestamo" name="estado_prestamo" required>
+                    <select class="form-control" id="estado_prestamo" name="estado_prestamo">
                         <option value="">Selecciona el estado</option>
                         {% for estado in estados_validos %}
                             <option value="{{ estado }}" {% if datos.get('estado_prestamo', material.estado_prestamo) == estado %}selected{% endif %}>
@@ -122,6 +123,7 @@
                             </option>
                         {% endfor %}
                     </select>
+                    <div id="error_estado_prestamo" class="campo-error"></div>
                 </div>
             </div>
 
@@ -188,7 +190,7 @@
                                                 class="btn btn-secondary btn-modal"
                                                 style="padding: 6px 10px; font-size: 0.75rem;"
                                                 data-tipo="fotos"
-                                                data-titulo="Foto: {{ material.nombre_material }}"
+                                                data-titulo="Foto: {{ material.nombre_material or "Sin nombre" }}"
                                                 data-archivos='{{ [foto.archivo]|tojson }}'>
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
                                             Ver
@@ -220,7 +222,7 @@
                                                 class="btn btn-secondary btn-modal"
                                                 style="padding: 6px 10px; font-size: 0.75rem;"
                                                 data-tipo="pdfs"
-                                                data-titulo="PDF: {{ material.nombre_material }}"
+                                                data-titulo="PDF: {{ material.nombre_material or "Sin nombre" }}"
                                                 data-archivos='{{ [pdf.archivo]|tojson }}'>
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
                                             Ver

@@ -4,6 +4,12 @@
 
 {% block content %}
 
+<style>
+    #formProfesor .campo-error:empty {
+        display: none;
+    }
+</style>
+
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
     <div>
         <h1 class="page-title">Inventario por Profesor</h1>
@@ -12,7 +18,7 @@
 </div>
 
 <div class="card" style="padding: 24px;">
-    <form method="POST" id="formProfesor" novalidate style="display: flex; gap: 16px; align-items: flex-end;">
+    <form method="POST" id="formProfesor" novalidate style="display: flex; gap: 16px; align-items: flex-start;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
             <label for="doctor_responsable" class="form-label">Seleccionar Profesor</label>
 
@@ -22,10 +28,9 @@
                     person_search
                 </i>
 
-                <select class="form-control"
+                <select class="form-control {% if error %}input-error{% endif %}"
                         name="doctor_responsable"
                         id="doctor_responsable"
-                        required
                         style="padding-left:48px;">
                     <option value="">Seleccione un profesor</option>
 
@@ -37,23 +42,25 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <div id="error_doctor_responsable" class="campo-error">
+                {%- if error -%}
+                    {{ error }}
+                {%- endif -%}
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
-            <i class="material-symbols-rounded">filter_alt</i>
-            Filtrar
-        </button>
+        <div style="display: flex; flex-direction: column; min-width: 136px;">
+            <label class="form-label" style="visibility: hidden;">Acción</label>
+
+            <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+                <i class="material-symbols-rounded">filter_alt</i>
+                Filtrar
+            </button>
+        </div>
     </form>
 
-    <div id="erroresProfesor"
-         style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">
-    </div>
-
-    {% if error %}
-        <p style="color:var(--danger); font-size: 0.875rem; margin-top: 8px; font-weight: 500;">
-            {{ error }}
-        </p>
-    {% endif %}
+    <div id="erroresProfesor" style="display:none;"></div>
 </div>
 
 {% if profesor_buscado and not error %}
@@ -93,7 +100,7 @@
                         {% for material in resultados %}
                         <tr>
                             <td>
-                                <div style="font-weight: 700;">{{ material.nombre_material }}</div>
+                                <div style="font-weight: 700;">{{ material.nombre_material or "Sin nombre" }}</div>
 
                                 {% if material.descripcion %}
                                     <div title="{{ material.descripcion }}"
@@ -113,7 +120,7 @@
 
                             <td>
                                 <span style="font-size:0.75rem; font-weight:600; color:{% if material.inventariado == 'Inventariado' %}var(--success){% else %}var(--text-muted){% endif %};">
-                                    {{ material.inventariado }}
+                                    {{ material.inventariado or '—' }}
                                 </span>
                             </td>
 
@@ -123,13 +130,18 @@
                             <td>{{ material.ubicacion or '—' }}</td>
 
                             <td>
-                                <span class="status-badge 
-                                    {% if material.estado_prestamo == 'Disponible' %}disponible
-                                    {% elif material.estado_prestamo == 'En préstamo' %}prestamo
-                                    {% elif material.estado_prestamo == 'Fuera de servicio' %}fuera
-                                    {% else %}mantenimiento{% endif %}">
-                                    {{ material.estado_prestamo }}
-                                </span>
+                                {% if material.estado_prestamo %}
+                                    <span class="status-badge
+                                        {% if material.estado_prestamo == 'Disponible' %}disponible
+                                        {% elif material.estado_prestamo == 'En préstamo' %}prestamo
+                                        {% elif material.estado_prestamo == 'Fuera de servicio' %}fuera
+                                        {% elif material.estado_prestamo == 'En mantenimiento' %}mantenimiento
+                                        {% endif %}">
+                                        {{ material.estado_prestamo }}
+                                    </span>
+                                {% else %}
+                                    —
+                                {% endif %}
                             </td>
 
                             <td>
@@ -139,7 +151,7 @@
                                                 class="btn btn-secondary btn-modal"
                                                 style="padding: 6px 8px; font-size: 0.75rem;"
                                                 data-tipo="fotos"
-                                                data-titulo="Fotos: {{ material.nombre_material }}"
+                                                data-titulo="Fotos: {{ material.nombre_material or 'Sin nombre' }}"
                                                 data-archivos='{{ material.fotos|map(attribute="archivo")|list|tojson }}'
                                                 title="Ver fotos">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">image</i>
@@ -159,7 +171,7 @@
                                                 class="btn btn-secondary btn-modal"
                                                 style="padding: 6px 8px; font-size: 0.75rem;"
                                                 data-tipo="pdfs"
-                                                data-titulo="PDFs: {{ material.nombre_material }}"
+                                                data-titulo="PDFs: {{ material.nombre_material or 'Sin nombre' }}"
                                                 data-archivos='{{ material.pdfs|map(attribute="archivo")|list|tojson }}'
                                                 title="Ver PDFs">
                                             <i class="material-symbols-rounded" style="font-size: 16px;">picture_as_pdf</i>
@@ -187,7 +199,7 @@
                                     <button type="button"
                                             class="btn btn-danger btn-eliminar"
                                             data-id="{{ material.id }}"
-                                            data-nombre="{{ material.nombre_material }}"
+                                            data-nombre="{{ material.nombre_material or 'este material' }}"
                                             style="padding: 6px 12px; font-size: 0.75rem;">
                                         Eliminar
                                     </button>
