@@ -119,15 +119,6 @@ def validar_archivos(fotos, pdfs, fotos_actuales=0, pdfs_actuales=0):
 
     return None
 
-def validar_pdf_factura(pdf):
-    if not pdf or not pdf.filename:
-        return None
-
-    filename = secure_filename(pdf.filename)
-
-    if not extension_permitida(filename, app.config["EXTENSIONES_PDFS"]):
-        return "Solo se permiten archivos PDF."
-
     return None
 
 def guardar_archivo(archivo, carpeta_config, ruta_relativa):
