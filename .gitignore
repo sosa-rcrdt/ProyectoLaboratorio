@@ -35,6 +35,10 @@ pip-delete-this-directory.txt
 
 # Bases de datos
 *.db
+static/uploads/
 
 # Backups
 backups/
+
+# Seed para creación de datos
+seed_data.py
