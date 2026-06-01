@@ -1,8 +1,8 @@
-# Laboratiorio de Electrónica y Optoelectrónica
+# Laboratorio de Electrónica y Optoelectrónica
 
 Aplicación web local desarrollada con Flask para administrar materiales de laboratorio, facturas, archivos PDF, fotografías y respaldos completos del sistema.
 
-El sistema está diseñado para funcionar de forma local en una computadora, sin depender de internet, servidores externos ni cuentas de usuario. La información se guarda en una base de datos SQLite (`database.db`) y los archivos cargados se almacenan dentro de `static/uploads/`.
+El sistema está diseñado para funcionar en una computadora local, sin depender de internet, servidores externos ni cuentas de usuario. La información se guarda en una base de datos SQLite (`database.db`) y los archivos cargados se almacenan dentro de `static/uploads/`.
 
 ---
 
@@ -33,7 +33,7 @@ El sistema permite:
 La información del sistema se guarda en dos lugares:
 
 ```text
-projecto/
+proyecto/
 ├── database.db
 └── static/
     └── uploads/
@@ -73,24 +73,55 @@ También puede ejecutarse en macOS o Linux, pero las instrucciones principales d
 
 ### Software necesario
 
-- Python 3.10 o 3.11.
+- Python 3.12.x recomendado.
 - pip.
 - Navegador web moderno: Chrome, Edge, Firefox o similar.
 - Espacio libre en disco para fotos, PDFs, facturas y respaldos.
 
 ### Versión recomendada de Python
 
-Se recomienda usar:
+La versión probada y recomendada para este proyecto es:
 
 ```text
-Python 3.10.x o Python 3.11.x
+Python 3.12.x
 ```
 
-Si la computadora tiene Python 3.12 o 3.13 y ocurre algún error instalando dependencias, se recomienda instalar Python 3.11 y crear el entorno virtual con esa versión.
+El proyecto ya fue probado correctamente con Python 3.12. También debería funcionar con Python 3.13.x si las dependencias se instalan correctamente desde `requirements.txt`.
+
+Para una instalación nueva en una computadora que no tenga Python, se recomienda instalar **Python 3.12.x** desde el sitio oficial y activar la opción **Add python.exe to PATH** durante la instalación.
+
+### Versiones no recomendadas
+
+No se recomienda usar:
+
+```text
+Python 3.10 o menor
+```
+
+El sistema podría funcionar en algunas versiones anteriores, pero para evitar problemas de compatibilidad se recomienda usar Python 3.12.x.
 
 ---
 
-## 4. Verificar si Python y pip están instalados
+## 4. Dependencias del proyecto
+
+El archivo `requirements.txt` debe contener las dependencias principales del sistema.
+
+Contenido recomendado:
+
+```txt
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.36
+greenlet==3.1.1
+reportlab==4.2.5
+pillow==11.0.0
+```
+
+No es necesario listar manualmente dependencias internas como `Jinja2`, `Werkzeug`, `click`, `MarkupSafe`, `itsdangerous` o `blinker`, porque Flask las instala automáticamente en versiones compatibles.
+
+---
+
+## 5. Verificar si Python y pip están instalados
 
 Abra **Símbolo del sistema** o **PowerShell** y ejecute:
 
@@ -106,21 +137,23 @@ py --version
 py -m pip --version
 ```
 
-### Caso A: la computadora ya tiene Python y pip correctos
+### Caso A: la computadora ya tiene Python compatible
 
-Si ve algo parecido a esto:
-
-```text
-Python 3.10.x
-```
-
-o:
+Si aparece algo como:
 
 ```text
-Python 3.11.x
+Python 3.12.x
 ```
 
 puede continuar con la instalación del proyecto.
+
+Si aparece:
+
+```text
+Python 3.13.x
+```
+
+también puede intentar continuar. Si ocurre algún problema al instalar dependencias, instale Python 3.12.x y repita la instalación.
 
 ### Caso B: la computadora no tiene Python
 
@@ -130,7 +163,7 @@ Si aparece un mensaje como:
 'python' no se reconoce como un comando interno o externo
 ```
 
-o:
+or:
 
 ```text
 Python was not found
@@ -140,15 +173,15 @@ instale Python antes de continuar.
 
 Pasos recomendados en Windows:
 
-1. Descargar Python desde el sitio oficial de Python.
-2. Instalar Python 3.11.
-3. Durante la instalación, activar la casilla:
+1. Descargar Python 3.12.x desde el sitio oficial de Python.
+2. Ejecutar el instalador.
+3. Activar la casilla:
 
 ```text
 Add python.exe to PATH
 ```
 
-4. Finalizar la instalación.
+4. Continuar con la instalación.
 5. Cerrar y volver a abrir la terminal.
 6. Verificar:
 
@@ -157,7 +190,7 @@ python --version
 pip --version
 ```
 
-Si `python` no funciona pero `py` sí funciona, use los comandos con `py` indicados más adelante.
+Si `python` no funciona pero `py` sí funciona, use los comandos con `py`.
 
 ### Caso C: la computadora tiene Python, pero está desactualizado
 
@@ -166,20 +199,21 @@ Si aparece algo como:
 ```text
 Python 3.8.x
 Python 3.9.x
+Python 3.10.x
 ```
 
-o una versión anterior, instale Python 3.10 o 3.11.
+instale Python 3.12.x.
 
-Después de instalarlo, verifique si está disponible:
+Después de instalarlo, verifique las versiones disponibles con:
 
 ```bat
 py -0
 ```
 
-Si aparece Python 3.11 en la lista, puede crear el entorno virtual con:
+Si aparece Python 3.12 en la lista, puede crear el entorno virtual con:
 
 ```bat
-py -3.11 -m venv venv
+py -3.12 -m venv venv
 ```
 
 ### Caso D: Python existe, pero pip no funciona
@@ -206,9 +240,13 @@ py -m pip install --upgrade pip setuptools wheel
 
 ---
 
-## 5. Instalación del sistema
+## 6. Instalación inicial del sistema
 
-### 5.1. Abrir la carpeta del proyecto
+La instalación inicial debe realizarla una persona encargada del equipo o del mantenimiento del proyecto. Esta instalación solo se realiza una vez por computadora.
+
+El usuario final no necesita repetir estos pasos diariamente. Después de la instalación, bastará con ejecutar `iniciar.bat`.
+
+### 6.1. Abrir la carpeta del proyecto
 
 Coloque la carpeta del proyecto en una ubicación sencilla, por ejemplo:
 
@@ -237,21 +275,92 @@ Si la ruta tiene espacios, use comillas:
 cd "C:\Users\Usuario\Documents\Sistema Laboratorio"
 ```
 
----
+### 6.2. Crear entorno virtual
 
-## 6. Instalación rápida manual
-
-Desde la carpeta raíz del proyecto, ejecute:
+Con `python`:
 
 ```bat
 python -m venv venv
+```
+
+Con `py` y Python 3.12:
+
+```bat
+py -3.12 -m venv venv
+```
+
+Si solo tiene una versión compatible de Python instalada, también puede usar:
+
+```bat
+py -3 -m venv venv
+```
+
+### 6.3. Activar entorno virtual
+
+```bat
 venv\Scripts\activate
+```
+
+### 6.4. Actualizar pip
+
+```bat
 python -m pip install --upgrade pip setuptools wheel
+```
+
+### 6.5. Instalar dependencias
+
+```bat
 python -m pip install -r requirements.txt
+```
+
+### 6.6. Verificar instalación
+
+Ejecute:
+
+```bat
 python app.py
 ```
 
-Luego abra en el navegador:
+Cuando aparezca algo similar a:
+
+```text
+Running on http://127.0.0.1:5000
+```
+
+abra el navegador en:
+
+```text
+http://127.0.0.1:5000
+```
+
+Para detener esta prueba, cierre primero la pestaña del navegador y después cierre la ventana de la terminal, o use `Ctrl + C`.
+
+---
+
+## 7. Ejecución diaria con `iniciar.bat`
+
+Después de que el sistema ya fue instalado en la computadora, el uso diario se realiza con:
+
+```text
+iniciar.bat
+```
+
+El archivo `iniciar.bat` sirve únicamente para iniciar el sistema. No instala dependencias ni crea el entorno virtual.
+
+Este archivo se encarga de:
+
+- Verificar que exista `app.py`.
+- Verificar que exista el entorno virtual `venv`.
+- Iniciar el servidor local.
+- Abrir automáticamente el navegador en:
+
+```text
+http://127.0.0.1:5000
+```
+
+Mientras se use el sistema, la ventana negra de `iniciar.bat` debe permanecer abierta.
+
+Si el navegador no se abre automáticamente, copie manualmente esta dirección en Chrome, Edge, Firefox o el navegador de su preferencia:
 
 ```text
 http://127.0.0.1:5000
@@ -259,31 +368,49 @@ http://127.0.0.1:5000
 
 ---
 
-## 7. Instalación usando `py` en Windows
+## 8. Cómo cerrar el sistema
 
-Si `python` no funciona pero `py` sí funciona, use:
+La forma recomendada para usuarios finales es:
 
-```bat
-py -m venv venv
-venv\Scripts\activate
-py -m pip install --upgrade pip setuptools wheel
-py -m pip install -r requirements.txt
-py app.py
+1. Cerrar la pestaña del navegador.
+2. Cerrar la ventana negra de `iniciar.bat` con la **X**.
+
+Si ya terminó de usar el sistema y no hay operaciones en curso, esto no debería afectar la base de datos ni los archivos guardados.
+
+No cierre la ventana mientras el sistema esté:
+
+- Guardando un material.
+- Editando una factura.
+- Eliminando información.
+- Subiendo fotos o PDFs.
+- Importando un respaldo.
+- Exportando un respaldo.
+
+### Cierre técnico alternativo
+
+También puede cerrarse desde la ventana negra con:
+
+```text
+Ctrl + C
 ```
 
-Si necesita forzar Python 3.11:
+Si Windows pregunta:
 
-```bat
-py -3.11 -m venv venv
-venv\Scripts\activate
-py -3.11 -m pip install --upgrade pip setuptools wheel
-py -3.11 -m pip install -r requirements.txt
-py -3.11 app.py
+```text
+¿Desea terminar el trabajo por lotes (S/N)?
 ```
+
+escriba:
+
+```text
+S
+```
+
+y presione Enter.
 
 ---
 
-## 8. Instalación en macOS o Linux
+## 9. Instalación en macOS o Linux
 
 Desde la carpeta raíz del proyecto:
 
@@ -302,87 +429,11 @@ Luego abra:
 http://127.0.0.1:5000
 ```
 
----
-
-## 9. Si se incluye script de instalación
-
-Si la carpeta del proyecto incluye un script como:
-
-```text
-instalar.bat
-```
-
-puede ejecutarse dando doble clic o desde terminal:
-
-```bat
-instalar.bat
-```
-
-Ese script debería encargarse de:
-
-- Verificar Python.
-- Crear el entorno virtual `venv`.
-- Actualizar pip.
-- Instalar dependencias desde `requirements.txt`.
-
-Si el script falla, use la instalación manual de este README.
+El archivo `iniciar.bat` está pensado para Windows. En macOS o Linux se debe iniciar el sistema desde terminal con `python3 app.py`.
 
 ---
 
-## 10. Si se incluye script de inicio
-
-Si la carpeta del proyecto incluye un script como:
-
-```text
-iniciar.bat
-```
-
-puede ejecutarse dando doble clic o desde terminal:
-
-```bat
-iniciar.bat
-```
-
-Ese script debería encargarse de:
-
-- Activar el entorno virtual.
-- Ejecutar `python app.py`.
-- Dejar el servidor local funcionando.
-
-Después abra:
-
-```text
-http://127.0.0.1:5000
-```
-
----
-
-## 11. Ejecución diaria después de instalar
-
-Una vez instalado, no es necesario repetir `pip install` cada vez.
-
-Para abrir el sistema en días posteriores:
-
-```bat
-venv\Scripts\activate
-python app.py
-```
-
-Luego abra el navegador en:
-
-```text
-http://127.0.0.1:5000
-```
-
-Para cerrar el sistema, vuelva a la terminal donde se está ejecutando Flask y presione:
-
-```text
-Ctrl + C
-```
-
----
-
-## 12. Modo consulta y modo edición
+## 10. Modo consulta y modo edición
 
 El sistema tiene dos modos:
 
@@ -439,7 +490,7 @@ EDIT_PASSWORD
 
 ---
 
-## 13. Respaldos del sistema
+## 11. Respaldos del sistema
 
 El sistema incluye un módulo de respaldos.
 
@@ -484,7 +535,7 @@ Así se mantiene la información completa, incluyendo base de datos, fotos y PDF
 
 ---
 
-## 14. Archivos y carpetas que no deben borrarse
+## 12. Archivos y carpetas que no deben borrarse
 
 No borre manualmente:
 
@@ -492,6 +543,7 @@ No borre manualmente:
 database.db
 static/uploads/
 backups/
+venv/
 ```
 
 ### `database.db`
@@ -506,11 +558,15 @@ Contiene las fotos y PDFs.
 
 Contiene respaldos automáticos generados antes de importar.
 
+### `venv/`
+
+Contiene el entorno virtual con las dependencias instaladas. Si se elimina, el sistema no podrá iniciar hasta que se vuelva a instalar el entorno.
+
 Si necesita mover la información, use la función **Exportar respaldo** desde el sistema.
 
 ---
 
-## 15. Estructura general del proyecto
+## 13. Estructura general del proyecto
 
 ```text
 proyecto/
@@ -520,6 +576,7 @@ proyecto/
 ├── database.db
 ├── requirements.txt
 ├── README.md
+├── iniciar.bat
 ├── backups/
 ├── static/
 │   ├── css/
@@ -533,44 +590,20 @@ proyecto/
 │       ├── fotos/
 │       ├── pdfs/
 │       └── facturas/
-└── templates/
-    ├── base.html
-    ├── menu.html
-    ├── materiales/
-    ├── facturas/
-    └── respaldos/
+├── templates/
+│   ├── base.html
+│   ├── menu.html
+│   ├── materiales/
+│   ├── facturas/
+│   └── respaldos/
+└── venv/
 ```
 
 ---
 
-## 16. Dependencias principales
+## 14. Problemas frecuentes y soluciones
 
-El proyecto usa principalmente:
-
-- Flask.
-- Flask-SQLAlchemy.
-- SQLite.
-- Jinja2.
-- ReportLab.
-- Werkzeug.
-
-Las dependencias se instalan desde:
-
-```text
-requirements.txt
-```
-
-Comando de instalación:
-
-```bat
-python -m pip install -r requirements.txt
-```
-
----
-
-## 17. Problemas frecuentes y soluciones
-
-### 17.1. `python` no se reconoce
+### 14.1. `python` no se reconoce
 
 Use:
 
@@ -578,11 +611,11 @@ Use:
 py --version
 ```
 
-Si `py` tampoco funciona, instale Python 3.10 o 3.11 y active la opción **Add Python to PATH** durante la instalación.
+Si `py` tampoco funciona, instale Python 3.12.x y active la opción **Add python.exe to PATH** durante la instalación.
 
 ---
 
-### 17.2. `pip` no se reconoce
+### 14.2. `pip` no se reconoce
 
 Use:
 
@@ -599,7 +632,7 @@ python -m pip install --upgrade pip setuptools wheel
 
 ---
 
-### 17.3. PowerShell no permite activar el entorno virtual
+### 14.3. PowerShell no permite activar el entorno virtual
 
 Si al ejecutar:
 
@@ -617,7 +650,7 @@ Después cierre y vuelva a abrir PowerShell.
 
 ---
 
-### 17.4. Error al instalar dependencias
+### 14.4. Error al instalar dependencias
 
 Primero actualice pip:
 
@@ -631,11 +664,28 @@ Luego intente de nuevo:
 python -m pip install -r requirements.txt
 ```
 
-Si el error está relacionado con la versión de Python, instale Python 3.11 y cree nuevamente el entorno virtual.
+Si aparece un error relacionado con `greenlet` o con compilación de dependencias, revise que `requirements.txt` use las versiones recomendadas de este README y que esté usando Python 3.12.x.
 
 ---
 
-### 17.5. Error extraño al leer `requirements.txt`
+### 14.5. Error por versiones antiguas de dependencias
+
+Si el proyecto tenía un `requirements.txt` antiguo con dependencias como:
+
+```text
+greenlet==2.0.2
+SQLAlchemy==1.4.54
+Flask-SQLAlchemy==3.0.5
+setuptools==58.1.0
+```
+
+reemplace el contenido por el listado recomendado de este README.
+
+Después elimine la carpeta `venv` y vuelva a realizar la instalación manual desde la sección **6. Instalación inicial del sistema**.
+
+---
+
+### 14.6. Error extraño al leer `requirements.txt`
 
 Si pip muestra errores raros de codificación, caracteres nulos o mensajes similares a `UnicodeDecodeError`, es posible que `requirements.txt` esté guardado con una codificación incorrecta.
 
@@ -651,7 +701,28 @@ python -m pip install -r requirements.txt
 
 ---
 
-### 17.6. La página no abre en el navegador
+### 14.7. `iniciar.bat` dice que no existe `venv`
+
+Esto significa que el sistema todavía no fue instalado en esa computadora o que la carpeta `venv` fue eliminada.
+
+Solución:
+
+1. Realizar la instalación manual desde la sección **6. Instalación inicial del sistema**.
+2. Verificar que exista:
+
+```text
+venv\Scripts\python.exe
+```
+
+3. Volver a ejecutar:
+
+```text
+iniciar.bat
+```
+
+---
+
+### 14.8. La página no abre en el navegador
 
 Verifique que la terminal muestre algo similar a:
 
@@ -669,16 +740,26 @@ Si no aparece ese mensaje, el servidor no está ejecutándose.
 
 ---
 
-### 17.7. El puerto 5000 está ocupado
+### 14.9. El navegador no se abrió automáticamente
+
+Si usa `iniciar.bat` y el navegador no se abre automáticamente, abra manualmente:
+
+```text
+http://127.0.0.1:5000
+```
+
+---
+
+### 14.10. El puerto 5000 está ocupado
 
 Si aparece un error indicando que el puerto está ocupado:
 
 1. Cierre otras terminales donde se esté ejecutando el sistema.
-2. Presione `Ctrl + C` en procesos anteriores.
+2. Cierre otras ventanas de `iniciar.bat`.
 3. Vuelva a ejecutar:
 
-```bat
-python app.py
+```text
+iniciar.bat
 ```
 
 Si el problema continúa, se puede cambiar el puerto al final de `app.py`, por ejemplo:
@@ -695,7 +776,7 @@ http://127.0.0.1:5001
 
 ---
 
-### 17.8. No aparecen fotos o PDFs
+### 14.11. No aparecen fotos o PDFs
 
 Revise que exista la carpeta:
 
@@ -715,7 +796,7 @@ Si movió el sistema a otra computadora, no copie solo `database.db`. Use **Expo
 
 ---
 
-### 17.9. Se perdió información después de importar
+### 14.12. Se perdió información después de importar
 
 Importar un respaldo reemplaza la información actual.
 
@@ -729,7 +810,7 @@ Si necesita recuperar el estado anterior, localice el respaldo automático más 
 
 ---
 
-### 17.10. No puedo entrar al modo edición
+### 14.13. No puedo entrar al modo edición
 
 Revise la contraseña configurada en:
 
@@ -747,7 +828,7 @@ Si se modifica la contraseña, reinicie el servidor para asegurar que el cambio 
 
 ---
 
-## 18. Recomendaciones de mantenimiento
+## 15. Recomendaciones de mantenimiento
 
 - Hacer respaldos frecuentes.
 - Exportar respaldo antes de mover el sistema a otra computadora.
@@ -755,12 +836,12 @@ Si se modifica la contraseña, reinicie el servidor para asegurar que el cambio 
 - No editar `database.db` manualmente.
 - No mover ni renombrar manualmente archivos dentro de `static/uploads/`.
 - No ejecutar varias instancias del sistema sobre la misma base de datos.
-- Cerrar el sistema con `Ctrl + C` cuando termine de usarse.
+- Cerrar primero el navegador y luego la ventana negra de `iniciar.bat`.
 - Guardar copias externas de los respaldos importantes.
 
 ---
 
-## 19. Uso prolongado del sistema
+## 16. Uso prolongado del sistema
 
 Este sistema está preparado para uso local prolongado bajo estas condiciones:
 
@@ -784,7 +865,7 @@ Exportar respaldo → mover ZIP → Importar respaldo
 
 ---
 
-## 20. Modo desarrollo y modo entrega
+## 17. Modo desarrollo y modo entrega
 
 Durante desarrollo es común ejecutar Flask con:
 
@@ -802,9 +883,15 @@ Esto evita que el usuario final vea mensajes técnicos detallados en caso de err
 
 ---
 
-## 21. Comandos rápidos
+## 18. Comandos rápidos
 
-### Crear entorno virtual
+### Iniciar automáticamente en Windows
+
+```text
+iniciar.bat
+```
+
+### Crear entorno virtual manualmente
 
 ```bat
 python -m venv venv
@@ -816,13 +903,13 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### Instalar dependencias
+### Instalar dependencias manualmente
 
 ```bat
 python -m pip install -r requirements.txt
 ```
 
-### Ejecutar sistema
+### Ejecutar sistema manualmente
 
 ```bat
 python app.py
@@ -834,14 +921,20 @@ python app.py
 http://127.0.0.1:5000
 ```
 
-### Cerrar sistema
+### Cerrar sistema para usuario final
 
 ```text
-Ctrl + C
+Cerrar navegador → cerrar ventana negra con X
+```
+
+### Cerrar sistema desde terminal
+
+```text
+Ctrl + C → S → Enter
 ```
 
 ---
 
-## 22. Nota final
+## 19. Nota final
 
 Este sistema funciona como una aplicación local. La base de datos y los archivos viven en la computadora donde se ejecuta. Para conservar la información y moverla correctamente, use siempre el módulo de respaldos integrado.
