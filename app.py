@@ -908,13 +908,16 @@ def menu():
 # LISTAR TODOS LOS MATERIALES
 @app.route("/materiales")
 def listar_materiales():
-    materiales = Material.query.all()
-    total_materiales = Material.query.count()
+    page = request.args.get('page', 1, type=int)
+    paginacion = Material.query.paginate(page=page, per_page=15, error_out=False)
+    materiales = paginacion.items
+    total_materiales = paginacion.total
 
     return render_template(
         "materiales/lista.html",
         materiales=materiales,
-        total_materiales=total_materiales
+        total_materiales=total_materiales,
+        paginacion=paginacion
     )
 
 
@@ -1005,9 +1008,10 @@ def buscar_material():
     resultados = []
     busqueda = ""
     error = None
+    paginacion = None
 
-    if request.method == "POST":
-        busqueda = request.form.get("busqueda", "").strip()
+    if request.method == "POST" or (request.method == "GET" and request.args.get("busqueda")):
+        busqueda = (request.form.get("busqueda") or request.args.get("busqueda", "")).strip()
 
         if not busqueda:
             error = "Debes escribir algo para buscar."
@@ -1023,20 +1027,25 @@ def buscar_material():
             if busqueda.isdigit():
                 filtros.append(Material.anio == int(busqueda))
 
-            resultados = Material.query.filter(
+            query = Material.query.filter(
                 filtros[0] |
                 filtros[1] |
                 filtros[2] |
                 filtros[3] |
                 filtros[4] |
                 (filtros[5] if len(filtros) > 5 else False)
-            ).all()
+            )
+
+            page = request.args.get('page', 1, type=int)
+            paginacion = query.paginate(page=page, per_page=15, error_out=False)
+            resultados = paginacion.items
 
     return render_template(
         "materiales/buscar.html",
         resultados=resultados,
         busqueda=busqueda,
-        error=error
+        error=error,
+        paginacion=paginacion
     )
 
 
@@ -1046,25 +1055,30 @@ def materiales_por_profesor():
     resultados = []
     profesor_buscado = ""
     error = None
+    paginacion = None
 
-    if request.method == "POST":
-        profesor_buscado = request.form.get("doctor_responsable", "").strip()
+    if request.method == "POST" or (request.method == "GET" and request.args.get("doctor_responsable")):
+        profesor_buscado = (request.form.get("doctor_responsable") or request.args.get("doctor_responsable", "")).strip()
 
         if not profesor_buscado:
             error = "Debes seleccionar un profesor."
         elif profesor_buscado not in PROFESORES:
             error = "El profesor seleccionado no es válido."
         else:
-            resultados = Material.query.filter_by(
+            query = Material.query.filter_by(
                 doctor_responsable=profesor_buscado
-            ).all()
+            )
+            page = request.args.get('page', 1, type=int)
+            paginacion = query.paginate(page=page, per_page=15, error_out=False)
+            resultados = paginacion.items
 
     return render_template(
         "materiales/profesor.html",
         resultados=resultados,
         profesor_buscado=profesor_buscado,
         profesores=PROFESORES,
-        error=error
+        error=error,
+        paginacion=paginacion
     )
 
 
@@ -1242,13 +1256,16 @@ def eliminar_material(id):
 # LISTAR FACTURAS
 @app.route("/facturas")
 def listar_facturas():
-    facturas = Factura.query.order_by(Factura.id.desc()).all()
-    total_facturas = Factura.query.count()
+    page = request.args.get('page', 1, type=int)
+    paginacion = Factura.query.order_by(Factura.id.desc()).paginate(page=page, per_page=15, error_out=False)
+    facturas = paginacion.items
+    total_facturas = paginacion.total
 
     return render_template(
         "facturas/lista.html",
         facturas=facturas,
-        total_facturas=total_facturas
+        total_facturas=total_facturas,
+        paginacion=paginacion
     )
 
 
@@ -1316,9 +1333,10 @@ def buscar_factura():
     resultados = []
     busqueda = ""
     error = None
+    paginacion = None
 
-    if request.method == "POST":
-        busqueda = request.form.get("busqueda", "").strip()
+    if request.method == "POST" or (request.method == "GET" and request.args.get("busqueda")):
+        busqueda = (request.form.get("busqueda") or request.args.get("busqueda", "")).strip()
 
         if not busqueda:
             error = "Debes escribir algo para buscar."
@@ -1338,13 +1356,18 @@ def buscar_factura():
             if len(filtros) > 2:
                 condicion = condicion | filtros[2]
 
-            resultados = Factura.query.filter(condicion).order_by(Factura.id.desc()).all()
+            query = Factura.query.filter(condicion).order_by(Factura.id.desc())
+
+            page = request.args.get('page', 1, type=int)
+            paginacion = query.paginate(page=page, per_page=15, error_out=False)
+            resultados = paginacion.items
 
     return render_template(
         "facturas/buscar.html",
         resultados=resultados,
         busqueda=busqueda,
-        error=error
+        error=error,
+        paginacion=paginacion
     )
 
 
@@ -1354,25 +1377,31 @@ def facturas_por_profesor():
     resultados = []
     profesor_buscado = ""
     error = None
+    paginacion = None
 
-    if request.method == "POST":
-        profesor_buscado = request.form.get("doctor_responsable", "").strip()
+    if request.method == "POST" or (request.method == "GET" and request.args.get("doctor_responsable")):
+        profesor_buscado = (request.form.get("doctor_responsable") or request.args.get("doctor_responsable", "")).strip()
 
         if not profesor_buscado:
             error = "Debes seleccionar un profesor."
         elif profesor_buscado not in PROFESORES:
             error = "El profesor seleccionado no es válido."
         else:
-            resultados = Factura.query.filter_by(
+            query = Factura.query.filter_by(
                 doctor_responsable=profesor_buscado
-            ).order_by(Factura.id.desc()).all()
+            ).order_by(Factura.id.desc())
+
+            page = request.args.get('page', 1, type=int)
+            paginacion = query.paginate(page=page, per_page=15, error_out=False)
+            resultados = paginacion.items
 
     return render_template(
         "facturas/profesor.html",
         resultados=resultados,
         profesor_buscado=profesor_buscado,
         profesores=PROFESORES,
-        error=error
+        error=error,
+        paginacion=paginacion
     )
 
 
