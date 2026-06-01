@@ -1,7 +1,86 @@
 document.addEventListener("DOMContentLoaded", function () {
+    inicializarToasts();
     inicializarModalArchivos();
     inicializarModalEliminar();
 });
+
+// ===== TOASTS GLOBALES =====
+function inicializarToasts() {
+    const toasts = document.querySelectorAll(".toast");
+
+    if (!toasts || toasts.length === 0) return;
+
+    toasts.forEach((toast) => {
+        const botonCerrar = toast.querySelector(".toast-close");
+        const duracion = obtenerDuracionToast(toast);
+        let timeoutId = null;
+
+        function cerrarToast() {
+            if (!toast || toast.classList.contains("toast-hide")) return;
+
+            toast.classList.add("toast-hide");
+
+            toast.addEventListener("animationend", function manejarFinAnimacion() {
+                toast.removeEventListener("animationend", manejarFinAnimacion);
+                toast.remove();
+            });
+
+            setTimeout(function () {
+                if (toast && toast.parentNode) {
+                    toast.remove();
+                }
+            }, 350);
+        }
+
+        if (botonCerrar) {
+            botonCerrar.addEventListener("click", function () {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
+                cerrarToast();
+            });
+        }
+
+        if (toast.dataset.autoclose === "true") {
+            timeoutId = setTimeout(cerrarToast, duracion);
+        }
+
+        toast.addEventListener("mouseenter", function () {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        });
+
+        toast.addEventListener("mouseleave", function () {
+            if (toast.dataset.autoclose === "true" && !toast.classList.contains("toast-hide")) {
+                timeoutId = setTimeout(cerrarToast, obtenerDuracionToast(toast) / 2);
+            }
+        });
+    });
+}
+
+
+function obtenerDuracionToast(toast) {
+    if (toast.classList.contains("toast-success")) {
+        return 4000;
+    }
+
+    if (toast.classList.contains("toast-info")) {
+        return 5000;
+    }
+
+    if (toast.classList.contains("toast-warning")) {
+        return 6000;
+    }
+
+    if (toast.classList.contains("toast-error")) {
+        return 7000;
+    }
+
+    return 5000;
+}
 
 // ===== MODAL GLOBAL DE ARCHIVOS =====
 function inicializarModalArchivos() {

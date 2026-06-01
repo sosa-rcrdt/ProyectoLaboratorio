@@ -80,6 +80,52 @@
 
 <body>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="toast-container" aria-live="polite" aria-atomic="true">
+                {% for category, message in messages %}
+                    {% set toast_class = category if category else 'info' %}
+
+                    {% if toast_class == 'success' %}
+                        {% set toast_icon = 'check_circle' %}
+                        {% set toast_title = 'Operación exitosa' %}
+                    {% elif toast_class == 'error' %}
+                        {% set toast_icon = 'error' %}
+                        {% set toast_title = 'Atención' %}
+                    {% elif toast_class == 'warning' %}
+                        {% set toast_icon = 'warning' %}
+                        {% set toast_title = 'Advertencia' %}
+                    {% elif toast_class == 'info' %}
+                        {% set toast_icon = 'info' %}
+                        {% set toast_title = 'Información' %}
+                    {% else %}
+                        {% set toast_icon = 'notifications' %}
+                        {% set toast_title = 'Aviso' %}
+                    {% endif %}
+
+                    <div class="toast toast-{{ toast_class }}"
+                         data-autoclose="true"
+                         role="status">
+                        <div class="toast-icon">
+                            <i class="material-symbols-rounded">{{ toast_icon }}</i>
+                        </div>
+
+                        <div class="toast-content">
+                            <div class="toast-title">{{ toast_title }}</div>
+                            <div class="toast-message">{{ message }}</div>
+                        </div>
+
+                        <button type="button"
+                                class="toast-close"
+                                aria-label="Cerrar notificación">
+                            <i class="material-symbols-rounded">close</i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="app-container">
         <!-- SIDEBAR -->
         <aside class="sidebar">
@@ -187,22 +233,8 @@
 
             <!-- PAGE CONTENT -->
             <div class="page-container">
-                
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="contenedor-mensajes">
-                            {% for category, message in messages %}
-                                <div class="mensaje-flash {{ category }}">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
-
                 {% block content %}
                 {% endblock %}
-
             </div>
         </main>
     </div>
