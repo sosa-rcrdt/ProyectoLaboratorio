@@ -35,3 +35,6 @@ pip-delete-this-directory.txt
 
 # Bases de datos
 *.db
+
+# Backups
+backups/
