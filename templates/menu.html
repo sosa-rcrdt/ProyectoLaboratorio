@@ -4,58 +4,7 @@
 
 {% block content %}
 
-<style>
-  .dashboard-main-layout {
-    display: grid;
-    grid-template-columns: minmax(560px, 1fr) minmax(360px, 0.95fr);
-    gap: 42px;
-    align-items: stretch;
-    margin-bottom: 36px;
-  }
 
-  .dashboard-sections {
-    min-width: 0;
-  }
-
-  .dashboard-section {
-    margin-bottom: 28px;
-  }
-
-  .dashboard-card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(240px, 1fr));
-    gap: 24px;
-  }
-
-  .dashboard-card-grid .card {
-    margin-bottom: 0;
-  }
-
-  .dashboard-carousel-column {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-self: stretch;
-    padding-top: 38px;
-  }
-
-  @media (max-width: 1180px) {
-    .dashboard-main-layout {
-      grid-template-columns: 1fr;
-      gap: 28px;
-    }
-
-    .dashboard-carousel-column {
-      padding-top: 0;
-    }
-  }
-
-  @media (max-width: 720px) {
-    .dashboard-card-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
 
 <h1 class="page-title">Estado del Inventario Global</h1>
 <p class="page-subtitle">Bienvenido al Panel de Gestión de Precisión</p>
@@ -423,87 +372,7 @@
 </script>
 {% endif %}
 
-<!-- ===== CARRUSEL DE IMÁGENES ===== -->
-<style>
-  .carousel-wrapper {
-    position: relative;
-    width: 100%;
-    flex: 0 0 auto;
-    height: 380px;
-    max-width: none;
-    margin: 0 0 24px 0;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    background: #000;
-  }
-  .logo-caoyf-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .carousel-track {
-    display: flex;
-    height: 100%;
-    transition: transform 0.6s cubic-bezier(.77,0,.18,1);
-    will-change: transform;
-  }
-  .carousel-slide {
-    min-width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  .carousel-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    opacity: 1;
-  }
-  .carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.18);
-    border: none;
-    color: #fff;
-    font-size: 2rem;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(6px);
-    transition: background 0.2s;
-    z-index: 10;
-  }
-  .carousel-btn:hover { background: rgba(255,255,255,0.38); }
-  .carousel-btn.prev { left: 14px; }
-  .carousel-btn.next { right: 14px; }
-  .carousel-dots {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    z-index: 10;
-  }
-  .carousel-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.45);
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.3s, transform 0.3s;
-  }
-  .carousel-dot.active {
-    background: #fff;
-    transform: scale(1.3);
-  }
-</style>
+
 
 <script>
 (function() {
