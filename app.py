@@ -530,8 +530,12 @@ def validar_factura(datos, presupuestos_validos, pdf=None, pdf_obligatorio=False
     if datos["presupuesto"] not in presupuestos_validos:
         return "El presupuesto seleccionado no es válido."
 
-    if datos["fecha_factura"] and not convertir_fecha_factura(datos["fecha_factura"]):
-        return "La fecha de la factura no es válida."
+    if datos["fecha_factura"]:
+        fecha_val = convertir_fecha_factura(datos["fecha_factura"])
+        if not fecha_val:
+            return "La fecha de la factura no es válida."
+        if fecha_val > datetime.now().date():
+            return "La fecha de la factura no puede ser posterior al día de hoy."
 
     error_pdf = validar_pdf_factura(pdf, obligatorio=pdf_obligatorio)
     if error_pdf:

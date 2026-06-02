@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     inicializarValidacionEditarFactura();
     inicializarValidacionBuscarFactura();
     inicializarValidacionProfesorFactura();
+    limitarFechaFacturaHoy();
 });
 
 
@@ -11,6 +12,7 @@ function inicializarLimpiezaErroresFactura() {
     [
         "doctor_responsable_factura",
         "presupuesto_factura",
+        "fecha_factura",
         "archivo_pdf_factura",
         "busqueda_factura",
         "doctor_responsable_factura_filtro"
@@ -34,6 +36,7 @@ function limpiarErroresCamposFactura() {
     limpiarErroresCampos([
         "doctor_responsable_factura",
         "presupuesto_factura",
+        "fecha_factura",
         "archivo_pdf_factura",
         "busqueda_factura",
         "doctor_responsable_factura_filtro"
@@ -211,6 +214,8 @@ function validarFormularioFactura(errores, erroresCampos, opciones = {}) {
     const doctorResponsable = document.getElementById("doctor_responsable_factura")?.value || "";
     const presupuesto = document.getElementById("presupuesto_factura")?.value || "";
     const archivoPdf = document.getElementById("archivo_pdf_factura");
+    const fechaFacturaInput = document.getElementById("fecha_factura");
+    const fechaFactura = fechaFacturaInput?.value || "";
 
     const presupuestosValidos = [
         "Secihti",
@@ -241,6 +246,19 @@ function validarFormularioFactura(errores, erroresCampos, opciones = {}) {
             "presupuesto_factura",
             "El presupuesto seleccionado no es válido."
         );
+    }
+
+    if (!esVacio(fechaFactura)) {
+        const fechaSeleccionada = new Date(fechaFactura + "T00:00:00");
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        if (fechaSeleccionada > hoy) {
+            agregarErrorCampo(
+                erroresCampos,
+                "fecha_factura",
+                "La fecha de la factura no puede ser posterior al día de hoy."
+            );
+        }
     }
 
     validarArchivoPDFFactura(archivoPdf, erroresCampos, {
@@ -323,4 +341,16 @@ function obtenerCamposVaciosFactura(opciones = {}) {
     }
 
     return camposVacios;
+}
+
+
+function limitarFechaFacturaHoy() {
+    const fechaFacturaInput = document.getElementById("fecha_factura");
+    if (fechaFacturaInput) {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        fechaFacturaInput.max = `${yyyy}-${mm}-${dd}`;
+    }
 }
