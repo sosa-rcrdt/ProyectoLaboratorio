@@ -211,7 +211,12 @@ def validar_material(datos, estados_validos, inventariado_validos, current_year)
         if not datos["anio"].isdigit():
             return "El año debe ser un número entero."
 
-        if int(datos["anio"]) > current_year:
+        anio = int(datos["anio"])
+
+        if anio < 1990:
+            return "El año no puede ser menor a 1990."
+
+        if anio > current_year:
             return "El año no puede ser mayor al actual."
 
     return None

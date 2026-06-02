@@ -250,6 +250,7 @@ function limpiarErroresCamposMaterial() {
     limpiarErroresCampos([
         "doctor_responsable",
         "estado_prestamo",
+        "anio",
         "busqueda"
     ]);
 }
@@ -476,12 +477,27 @@ function validarReglasMaterialBloqueantes(errores, erroresCampos = {}) {
 
     if (!esVacio(anio)) {
         if (!/^\d+$/.test(anio.trim())) {
-            errores.push("El año debe ser un número entero.");
+            agregarErrorCampo(
+                erroresCampos,
+                "anio",
+                "El año debe ser un número entero."
+            );
         } else {
             const anioActual = new Date().getFullYear();
+            const anioNumero = parseInt(anio, 10);
 
-            if (parseInt(anio, 10) > anioActual) {
-                errores.push("El año no puede ser mayor al actual.");
+            if (anioNumero < 1990) {
+                agregarErrorCampo(
+                    erroresCampos,
+                    "anio",
+                    "El año no puede ser menor a 1990."
+                );
+            } else if (anioNumero > anioActual) {
+                agregarErrorCampo(
+                    erroresCampos,
+                    "anio",
+                    "El año no puede ser mayor al actual."
+                );
             }
         }
     }
