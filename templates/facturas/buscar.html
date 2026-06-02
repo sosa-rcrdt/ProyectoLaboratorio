@@ -4,50 +4,94 @@
 
 {% block content %}
 
-
-
 <h1 class="page-title">Búsqueda de Facturas</h1>
-<p class="page-subtitle">Localiza facturas por presupuesto, fecha o descripción.</p>
+<p class="page-subtitle">Localiza facturas por presupuesto, año o mes de factura.</p>
 
 <div class="card" style="padding: 24px; background: var(--surface);">
-    <form method="POST" id="formBuscarFactura" novalidate style="display: flex; gap: 16px; align-items: flex-start;">
-        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label for="busqueda_factura" class="form-label" style="display:none;">Buscar factura:</label>
+    <form method="POST" id="formBuscarFactura" novalidate>
+        <div style="display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr auto; gap: 16px; align-items: flex-start;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="presupuesto_factura_busqueda" class="form-label">Presupuesto</label>
 
-            <div style="position: relative;">
-                <i class="material-symbols-rounded"
-                   style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--neutral-light);">
-                    search
-                </i>
+                <select class="form-control"
+                        id="presupuesto_factura_busqueda"
+                        name="presupuesto">
+                    <option value="">Todos los presupuestos</option>
 
-                <input type="text"
-                       class="form-control {% if error %}input-error{% endif %}"
-                       id="busqueda_factura"
-                       name="busqueda"
-                       value="{{ busqueda }}"
-                       placeholder="Buscar por presupuesto, fecha o descripción..."
-                       style="padding-left:48px;">
+                    {% for presupuesto in presupuestos %}
+                        <option value="{{ presupuesto }}"
+                            {% if presupuesto_buscado == presupuesto %}selected{% endif %}>
+                            {{ presupuesto }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div id="error_presupuesto_factura_busqueda" class="campo-error"></div>
             </div>
 
-            <div id="error_busqueda_factura" class="campo-error">
-                {%- if error -%}
-                    {{ error }}
-                {%- endif -%}
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="anio_factura_busqueda" class="form-label">Año</label>
+
+                <select class="form-control"
+                        id="anio_factura_busqueda"
+                        name="anio_factura">
+                    <option value="">Todos los años</option>
+
+                    {% for anio in anios_factura %}
+                        <option value="{{ anio }}"
+                            {% if anio_buscado|string == anio|string %}selected{% endif %}>
+                            {{ anio }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div id="error_anio_factura_busqueda" class="campo-error"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="mes_factura_busqueda" class="form-label">Mes</label>
+
+                <select class="form-control"
+                        id="mes_factura_busqueda"
+                        name="mes_factura"
+                        {% if not anio_buscado %}disabled{% endif %}>
+                    <option value="">Todos los meses</option>
+
+                    {% for mes in meses_factura %}
+                        <option value="{{ mes.valor }}"
+                            {% if mes_buscado|string == mes.valor|string %}selected{% endif %}>
+                            {{ mes.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div id="error_mes_factura_busqueda" class="campo-error"></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; min-width: 138px;">
+                <label class="form-label" style="visibility: hidden;">Acción</label>
+
+                <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+                    <i class="material-symbols-rounded">filter_list</i>
+                    Buscar
+                </button>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
-            <i class="material-symbols-rounded">filter_list</i>
-            Buscar
-        </button>
+        <div id="erroresBuscarFactura" class="campo-error" style="margin-top: 10px;">
+            {%- if error -%}
+                {{ error }}
+            {%- endif -%}
+        </div>
     </form>
-
-    <div id="erroresBuscarFactura" style="display:none;"></div>
 </div>
 
-{% if busqueda %}
+{% if busqueda_realizada and not error %}
     <h3 style="margin: 32px 0 16px; font-size: 1.125rem; font-weight: 600; color: var(--text-main);">
-        Resultados para: "<span style="color:var(--primary);">{{ busqueda }}</span>"
+        Resultados para:
+        <span style="color:var(--primary);">
+            "{{ resumen_busqueda }}"
+        </span>
     </h3>
 
     {% if resultados %}
@@ -141,12 +185,18 @@
         {% if paginacion and paginacion.pages > 1 %}
         <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; padding-bottom: 24px;">
             {% if paginacion.has_prev %}
-                <a href="{{ url_for('buscar_factura', page=paginacion.prev_num, busqueda=busqueda) }}" class="btn btn-secondary" style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; text-decoration: none;">
-                    <i class="material-symbols-rounded" style="font-size: 18px;">chevron_left</i> Anterior
+                <a href="{{ url_for('buscar_factura', page=paginacion.prev_num, presupuesto=presupuesto_buscado, anio_factura=anio_buscado, mes_factura=mes_buscado) }}"
+                   class="btn btn-secondary"
+                   style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+                    <i class="material-symbols-rounded" style="font-size: 18px;">chevron_left</i>
+                    Anterior
                 </a>
             {% else %}
-                <button class="btn btn-secondary" disabled style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; opacity: 0.5; cursor: not-allowed;">
-                    <i class="material-symbols-rounded" style="font-size: 18px; color: inherit;">chevron_left</i> Anterior
+                <button class="btn btn-secondary"
+                        disabled
+                        style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; opacity: 0.5; cursor: not-allowed;">
+                    <i class="material-symbols-rounded" style="font-size: 18px; color: inherit;">chevron_left</i>
+                    Anterior
                 </button>
             {% endif %}
 
@@ -154,9 +204,15 @@
                 {% for page_num in paginacion.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                         {% if page_num == paginacion.page %}
-                            <span class="btn btn-primary" style="padding: 8px 14px; font-weight: bold; cursor: default;">{{ page_num }}</span>
+                            <span class="btn btn-primary" style="padding: 8px 14px; font-weight: bold; cursor: default;">
+                                {{ page_num }}
+                            </span>
                         {% else %}
-                            <a href="{{ url_for('buscar_factura', page=page_num, busqueda=busqueda) }}" class="btn btn-secondary" style="padding: 8px 14px; text-decoration: none;">{{ page_num }}</a>
+                            <a href="{{ url_for('buscar_factura', page=page_num, presupuesto=presupuesto_buscado, anio_factura=anio_buscado, mes_factura=mes_buscado) }}"
+                               class="btn btn-secondary"
+                               style="padding: 8px 14px; text-decoration: none;">
+                                {{ page_num }}
+                            </a>
                         {% endif %}
                     {% else %}
                         <span style="padding: 8px; color: var(--text-muted);">...</span>
@@ -165,12 +221,18 @@
             </div>
 
             {% if paginacion.has_next %}
-                <a href="{{ url_for('buscar_factura', page=paginacion.next_num, busqueda=busqueda) }}" class="btn btn-secondary" style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; text-decoration: none;">
-                    Siguiente <i class="material-symbols-rounded" style="font-size: 18px;">chevron_right</i>
+                <a href="{{ url_for('buscar_factura', page=paginacion.next_num, presupuesto=presupuesto_buscado, anio_factura=anio_buscado, mes_factura=mes_buscado) }}"
+                   class="btn btn-secondary"
+                   style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+                    Siguiente
+                    <i class="material-symbols-rounded" style="font-size: 18px;">chevron_right</i>
                 </a>
             {% else %}
-                <button class="btn btn-secondary" disabled style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; opacity: 0.5; cursor: not-allowed;">
-                    Siguiente <i class="material-symbols-rounded" style="font-size: 18px; color: inherit;">chevron_right</i>
+                <button class="btn btn-secondary"
+                        disabled
+                        style="padding: 8px 12px; display: flex; align-items: center; gap: 4px; opacity: 0.5; cursor: not-allowed;">
+                    Siguiente
+                    <i class="material-symbols-rounded" style="font-size: 18px; color: inherit;">chevron_right</i>
                 </button>
             {% endif %}
         </div>
@@ -179,12 +241,12 @@
         <div style="padding: 40px; text-align: center; color: var(--text-muted); background:var(--surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg);">
             <i class="material-symbols-rounded" style="font-size: 64px; opacity: 0.3; margin-bottom:16px;">search_off</i>
             <h3>No se encontraron resultados</h3>
-            <p>No pudimos localizar ninguna factura asociada a tu búsqueda.</p>
+            <p>No pudimos localizar ninguna factura asociada a los criterios seleccionados.</p>
         </div>
     {% endif %}
 {% endif %}
 
-{% if not busqueda %}
+{% if not busqueda_realizada %}
 <div style="display: flex; justify-content: center; align-items: flex-end; margin-top: 5px; flex-grow: 1;">
     <img src="{{ url_for('static', filename='css/Logo CAOyF.jpg') }}"
          alt="Ilustración Laboratorio"

@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     inicializarValidacionEditarFactura();
     inicializarValidacionBuscarFactura();
     inicializarValidacionProfesorFactura();
+    inicializarSelectorMesFacturaBusqueda();
     limitarFechaFacturaHoy();
 });
 
@@ -14,18 +15,22 @@ function inicializarLimpiezaErroresFactura() {
         "presupuesto_factura",
         "fecha_factura",
         "archivo_pdf_factura",
-        "busqueda_factura",
-        "doctor_responsable_factura_filtro"
+        "doctor_responsable_factura_filtro",
+        "presupuesto_factura_busqueda",
+        "anio_factura_busqueda",
+        "mes_factura_busqueda"
     ].forEach((campoId) => {
         const campo = document.getElementById(campoId);
 
         if (campo) {
             campo.addEventListener("input", function () {
                 limpiarErrorCampo(campoId);
+                limpiarErrores(document.getElementById("erroresBuscarFactura"));
             });
 
             campo.addEventListener("change", function () {
                 limpiarErrorCampo(campoId);
+                limpiarErrores(document.getElementById("erroresBuscarFactura"));
             });
         }
     });
@@ -38,8 +43,10 @@ function limpiarErroresCamposFactura() {
         "presupuesto_factura",
         "fecha_factura",
         "archivo_pdf_factura",
-        "busqueda_factura",
-        "doctor_responsable_factura_filtro"
+        "doctor_responsable_factura_filtro",
+        "presupuesto_factura_busqueda",
+        "anio_factura_busqueda",
+        "mes_factura_busqueda"
     ]);
 }
 
@@ -160,24 +167,61 @@ function inicializarValidacionBuscarFactura() {
 
     formBuscar.addEventListener("submit", function (event) {
         const erroresCampos = {};
-        const busqueda = document.getElementById("busqueda_factura")?.value || "";
+
+        const presupuesto = document.getElementById("presupuesto_factura_busqueda")?.value || "";
+        const anio = document.getElementById("anio_factura_busqueda")?.value || "";
+        const mes = document.getElementById("mes_factura_busqueda")?.value || "";
 
         limpiarErrores(erroresBuscar);
-        limpiarErrorCampo("busqueda_factura");
+        limpiarErrorCampo("presupuesto_factura_busqueda");
+        limpiarErrorCampo("anio_factura_busqueda");
+        limpiarErrorCampo("mes_factura_busqueda");
 
-        if (esVacio(busqueda)) {
+        if (esVacio(presupuesto) && esVacio(anio) && esVacio(mes)) {
+            event.preventDefault();
+
+            if (erroresBuscar) {
+                erroresBuscar.innerHTML = "Selecciona al menos un criterio de búsqueda.";
+            }
+
+            return;
+        }
+
+        if (!esVacio(mes) && esVacio(anio)) {
+            event.preventDefault();
+
             agregarErrorCampo(
                 erroresCampos,
-                "busqueda_factura",
-                "Debes escribir algo para buscar."
+                "mes_factura_busqueda",
+                "Para filtrar por mes, primero selecciona un año."
             );
         }
 
         if (hayErroresCampos(erroresCampos)) {
-            event.preventDefault();
             mostrarErroresCampos(erroresCampos);
         }
     });
+}
+
+function inicializarSelectorMesFacturaBusqueda() {
+    const anio = document.getElementById("anio_factura_busqueda");
+    const mes = document.getElementById("mes_factura_busqueda");
+
+    if (!anio || !mes) return;
+
+    function actualizarEstadoMes() {
+        if (esVacio(anio.value || "")) {
+            mes.value = "";
+            mes.disabled = true;
+            limpiarErrorCampo("mes_factura_busqueda");
+        } else {
+            mes.disabled = false;
+        }
+    }
+
+    actualizarEstadoMes();
+
+    anio.addEventListener("change", actualizarEstadoMes);
 }
 
 

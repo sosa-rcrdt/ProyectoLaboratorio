@@ -99,6 +99,21 @@ PRESUPUESTOS_FACTURA = [
     "PFCE-PIFI"
 ]
 
+MESES_FACTURA = [
+    {"valor": "1", "nombre": "Enero"},
+    {"valor": "2", "nombre": "Febrero"},
+    {"valor": "3", "nombre": "Marzo"},
+    {"valor": "4", "nombre": "Abril"},
+    {"valor": "5", "nombre": "Mayo"},
+    {"valor": "6", "nombre": "Junio"},
+    {"valor": "7", "nombre": "Julio"},
+    {"valor": "8", "nombre": "Agosto"},
+    {"valor": "9", "nombre": "Septiembre"},
+    {"valor": "10", "nombre": "Octubre"},
+    {"valor": "11", "nombre": "Noviembre"},
+    {"valor": "12", "nombre": "Diciembre"},
+]
+
 
 def archivos_con_nombre(lista_archivos):
     return [archivo for archivo in lista_archivos if archivo and archivo.filename]
@@ -501,6 +516,97 @@ def convertir_fecha_factura(fecha_texto):
     except ValueError:
         return None
 
+def obtener_anios_facturas():
+    fechas = db.session.query(Factura.fecha_factura).filter(
+        Factura.fecha_factura.isnot(None)
+    ).all()
+
+    return sorted(
+        {fecha.year for (fecha,) in fechas if fecha},
+        reverse=True
+    )
+
+
+def obtener_nombre_mes_factura(valor_mes):
+    valor_mes = str(valor_mes)
+
+    for mes in MESES_FACTURA:
+        if mes["valor"] == valor_mes:
+            return mes["nombre"]
+
+    return ""
+
+
+def obtener_rango_fecha_factura(anio, mes=None):
+    anio = int(anio)
+
+    if mes:
+        mes = int(mes)
+
+        fecha_inicio = datetime(anio, mes, 1).date()
+
+        if mes == 12:
+            fecha_fin = datetime(anio + 1, 1, 1).date()
+        else:
+            fecha_fin = datetime(anio, mes + 1, 1).date()
+
+        return fecha_inicio, fecha_fin
+
+    fecha_inicio = datetime(anio, 1, 1).date()
+    fecha_fin = datetime(anio + 1, 1, 1).date()
+
+    return fecha_inicio, fecha_fin
+
+
+def validar_busqueda_factura(presupuesto, anio, mes):
+    if not presupuesto and not anio and not mes:
+        return "Selecciona al menos un criterio de búsqueda."
+
+    if presupuesto and presupuesto not in PRESUPUESTOS_FACTURA:
+        return "El presupuesto seleccionado no es válido."
+
+    if mes and not anio:
+        return "Para filtrar por mes, primero debes seleccionar un año."
+
+    if anio:
+        if not anio.isdigit():
+            return "El año seleccionado no es válido."
+
+        anio_numero = int(anio)
+        anio_actual = datetime.now().year
+
+        if anio_numero < 1900 or anio_numero > anio_actual:
+            return "El año seleccionado no es válido."
+
+    if mes:
+        if not mes.isdigit():
+            return "El mes seleccionado no es válido."
+
+        mes_numero = int(mes)
+
+        if mes_numero < 1 or mes_numero > 12:
+            return "El mes seleccionado no es válido."
+
+    return None
+
+
+def construir_resumen_busqueda_factura(presupuesto, anio, mes):
+    criterios = []
+
+    if presupuesto:
+        criterios.append(f"Presupuesto: {presupuesto}")
+
+    if anio:
+        criterios.append(f"Año: {anio}")
+
+    if mes:
+        nombre_mes = obtener_nombre_mes_factura(mes)
+
+        if nombre_mes:
+            criterios.append(f"Mes: {nombre_mes}")
+
+    return " · ".join(criterios)
+
 
 def validar_pdf_factura(pdf, obligatorio=False):
     if obligatorio and (not pdf or not pdf.filename):
@@ -721,7 +827,7 @@ def generar_nombre_respaldo_automatico():
     return f"autobackup_antes_importar_{fecha}.zip"
 
 
-def limpiar_respaldos_automaticos(limite=5):
+def limpiar_respaldos_automaticos(limite=10):
     ruta_backups = obtener_ruta_backups_automaticos()
 
     respaldos = []
@@ -752,7 +858,7 @@ def crear_respaldo_automatico_pre_importacion():
     with open(ruta_respaldo, "wb") as archivo:
         archivo.write(zip_buffer.getvalue())
 
-    limpiar_respaldos_automaticos(limite=5)
+    limpiar_respaldos_automaticos(limite=10)
 
     return ruta_respaldo
 
@@ -1340,45 +1446,96 @@ def crear_factura():
 @app.route("/facturas/buscar", methods=["GET", "POST"])
 def buscar_factura():
     resultados = []
-    busqueda = ""
     error = None
     paginacion = None
 
-    if request.method == "POST" or (request.method == "GET" and request.args.get("busqueda")):
-        busqueda = (request.form.get("busqueda") or request.args.get("busqueda", "")).strip()
+    presupuesto_buscado = (
+        request.form.get("presupuesto")
+        or request.args.get("presupuesto", "")
+    ).strip()
 
-        if not busqueda:
-            error = "Debes escribir algo para buscar."
-        else:
-            filtros = [
-                Factura.presupuesto.ilike(f"%{busqueda}%"),
-                Factura.descripcion.ilike(f"%{busqueda}%")
-            ]
+    anio_buscado = (
+        request.form.get("anio_factura")
+        or request.args.get("anio_factura", "")
+    ).strip()
 
-            fecha_buscada = convertir_fecha_factura(busqueda)
+    mes_buscado = (
+        request.form.get("mes_factura")
+        or request.args.get("mes_factura", "")
+    ).strip()
 
-            if fecha_buscada:
-                filtros.append(Factura.fecha_factura == fecha_buscada)
+    busqueda_realizada = bool(
+        presupuesto_buscado or anio_buscado or mes_buscado
+    )
 
-            condicion = filtros[0] | filtros[1]
+    if request.method == "POST" or busqueda_realizada:
+        error = validar_busqueda_factura(
+            presupuesto_buscado,
+            anio_buscado,
+            mes_buscado
+        )
 
-            if len(filtros) > 2:
-                condicion = condicion | filtros[2]
+        if not error:
+            query = Factura.query
 
-            query = Factura.query.filter(condicion).order_by(Factura.id.desc())
+            if presupuesto_buscado:
+                query = query.filter(Factura.presupuesto == presupuesto_buscado)
 
-            page = request.args.get('page', 1, type=int)
-            paginacion = query.paginate(page=page, per_page=15, error_out=False)
+            if anio_buscado:
+                fecha_inicio, fecha_fin = obtener_rango_fecha_factura(
+                    anio_buscado,
+                    mes_buscado if mes_buscado else None
+                )
+
+                query = query.filter(
+                    Factura.fecha_factura >= fecha_inicio,
+                    Factura.fecha_factura < fecha_fin
+                )
+
+            query = query.order_by(Factura.id.desc())
+
+            page = request.args.get("page", 1, type=int)
+
+            if request.method == "POST":
+                page = 1
+
+            paginacion = query.paginate(
+                page=page,
+                per_page=10,
+                error_out=False
+            )
+
             resultados = paginacion.items
+
+    anios_factura = obtener_anios_facturas()
+
+    if anio_buscado and anio_buscado.isdigit():
+        anio_numero = int(anio_buscado)
+
+        if anio_numero not in anios_factura:
+            anios_factura.append(anio_numero)
+            anios_factura = sorted(anios_factura, reverse=True)
+
+    resumen_busqueda = construir_resumen_busqueda_factura(
+        presupuesto_buscado,
+        anio_buscado,
+        mes_buscado
+    )
 
     return render_template(
         "facturas/buscar.html",
         resultados=resultados,
-        busqueda=busqueda,
         error=error,
-        paginacion=paginacion
+        paginacion=paginacion,
+        presupuestos=PRESUPUESTOS_FACTURA,
+        meses_factura=MESES_FACTURA,
+        anios_factura=anios_factura,
+        presupuesto_buscado=presupuesto_buscado,
+        anio_buscado=anio_buscado,
+        mes_buscado=mes_buscado,
+        resumen_busqueda=resumen_busqueda,
+        busqueda_realizada=busqueda_realizada
     )
-
 
 # VER FACTURAS POR PROFESOR
 @app.route("/facturas/profesor", methods=["GET", "POST"])
